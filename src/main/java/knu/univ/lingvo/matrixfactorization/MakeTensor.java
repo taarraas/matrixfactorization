@@ -54,18 +54,6 @@ public class MakeTensor {
             PATH = "/home/taras/Downloads/enwiki-latest-pages-articles.xml.bz2";
         else
             PATH = args[0];
-        final Main m = new Main();
-        MakeTensor mt = new MakeTensor(PATH, new PageHandler() {
-            public void handle(String page) {
-                final Map<String, String>[] wordByTypePair = m.getWordByTypePair(page);
-                System.out.println("----------- page");
-                for (Map<String, String> map : wordByTypePair) {
-                    System.out.println(">>>>>");
-                    for (Map.Entry<String, String> entry : map.entrySet()) {
-                        System.out.println(entry.getKey() + " - " + entry.getValue());
-                    }
-                }
-            }
-        });
+        MakeTensor mt = new MakeTensor(PATH, new FillMorePageHandler());
     }
 }
