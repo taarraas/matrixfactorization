@@ -438,6 +438,31 @@ public class Main {
         XML.add("</sentence_words>\r\n");
         return XML;
     }
+    
+    public Map<String, String>[] getWordByTypePair(String text) {
+        String sentences[] = _sentenceDetector.sentDetect(text);
+        Map<String, String>[] ret = new Map[sentences.length];
+        
+        for (int i = 0; i < sentences.length; i++) {
+            String sentence = sentences[i];
+            String tokens[] = _tokenizer.tokenize(sentence);
+            Parse p = parseSentence(sentence, tokens);
+            StringBuffer sb = new StringBuffer();
+            p.show(sb);
+            String parsedSentence = sb.toString();
+            DefaultMutableTreeNode tree = _groupFinder.getTree(parsedSentence);
+            DefaultMutableTreeNode WSDtree = _wordnet.transformToWSDTree(tree);
+            _wordnet.solveWSDTree(WSDtree);
+            ArrayList<GrammarCase> patterns = _Fillmore.parse(parsedSentence, WSDtree);
+            
+            Map<String, String> textByType = new HashMap<String, String>();
+            for (GrammarCase grammarCase : patterns) {
+                 textByType.put(grammarCase.caseType, grammarCase.patternText);                 
+            }
+            ret[i] = textByType;
+         }
+        return ret;
+    }
 
     /** Function execute all semantic routines and return Semantic Net of text wuth thematic labels*/
     public String getSemanticTaggedXML(String text){
