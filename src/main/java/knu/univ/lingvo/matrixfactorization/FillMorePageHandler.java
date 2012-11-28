@@ -16,18 +16,30 @@ import knu.univ.lingvo.analysis.Main;
 public class FillMorePageHandler implements PageHandler {
 
     final Main m = new Main();
-    private static final int MINIMALPARAGRAPH = 500;
+    private static final int MINIMALPARAGRAPH = 50;
     WikiModel wikiModel = new WikiModel("http://www.mywiki.com/wiki/${image}", "http://www.mywiki.com/wiki/${title}");
 
     public void handle(String rawPage) {
         String plainStr = wikiModel.render(new PlainTextConverter(), rawPage);
-        String page = plainStr.replaceAll("\\{\\{[^\\}]*\\}\\}", "");
-        final Map<String, String>[] wordByTypePair = m.getWordByTypePair(page);
-        System.out.println("----------- page");
-        for (Map<String, String> map : wordByTypePair) {
-            System.out.println(">>>>>");
-            for (Map.Entry<String, String> entry : map.entrySet()) {
-                System.out.println(entry.getKey() + " - " + entry.getValue());
+        String woBrackets = plainStr.replaceAll("\\{\\{[^\\}]*\\}\\}", "");
+        final String[] paragraphs = woBrackets.split("\\n");
+        for (String text : paragraphs) {
+            if (text.length() < MINIMALPARAGRAPH) {
+                continue;
+            }
+            String sentences[] = m._sentenceDetector.sentDetect(text);
+            for (String sentence : sentences) {
+                if (sentence.length() < 15)
+                    continue;
+                final Map<String, String> wordByTypePair = m.getWordByTypePair(text);
+                if (wordByTypePair.isEmpty())
+                    continue;
+                System.out.println();
+                System.out.println(sentence);
+                System.out.println(">>>>>");
+                for (Map.Entry<String, String> entry : wordByTypePair.entrySet()) {
+                    System.out.println(entry.getKey() + " - " + entry.getValue());
+                }
             }
         }
     }

@@ -52,7 +52,7 @@ import knu.univ.lingvo.analysis.GroupFinder;
 public class Main {
     String LSADir = "data/lsa/LuceneIndex1000"; // Dir with LSA trained data
 //    LSA _lsaContent = null;
-    SentenceDetector _sentenceDetector = null;
+    public SentenceDetector _sentenceDetector = null;
     Tokenizer _tokenizer = null;
     POSTagger _posTagger = null;
     Parser _parser = null;
@@ -439,12 +439,7 @@ public class Main {
         return XML;
     }
     
-    public Map<String, String>[] getWordByTypePair(String text) {
-        String sentences[] = _sentenceDetector.sentDetect(text);
-        Map<String, String>[] ret = new Map[sentences.length];
-        
-        for (int i = 0; i < sentences.length; i++) {
-            String sentence = sentences[i];
+    public Map<String, String> getWordByTypePair(String sentence) {
             String tokens[] = _tokenizer.tokenize(sentence);
             Parse p = parseSentence(sentence, tokens);
             StringBuffer sb = new StringBuffer();
@@ -459,9 +454,7 @@ public class Main {
             for (GrammarCase grammarCase : patterns) {
                  textByType.put(grammarCase.caseType, grammarCase.patternText);                 
             }
-            ret[i] = textByType;
-         }
-        return ret;
+            return textByType;
     }
 
     /** Function execute all semantic routines and return Semantic Net of text wuth thematic labels*/
