@@ -31,7 +31,7 @@ public class FillMorePageHandler implements PageHandler {
             for (String sentence : sentences) {
                 if (sentence.length() < 15)
                     continue;
-                final Map<String, String> wordByTypePair = m.getWordByTypePair(text);
+                final Map<String, String> wordByTypePair = m.getWordByTypePair(sentence);
                 if (wordByTypePair.isEmpty())
                     continue;
                 System.out.println();
