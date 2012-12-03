@@ -30,21 +30,11 @@ public class MakeTensor {
         this.path = path;
         this.handler = handler;
         stream = new BZip2CompressorInputStream(new FileInputStream(path));
-        
         SAXParserFactory factory = SAXParserFactory.newInstance();
         SAXParser newSAXParser = factory.newSAXParser();
         newSAXParser.parse(stream, new WikiPageHandler(handler));
     }
-    
-    public String nextPage() throws IOException {
-        final byte[] buffer = new byte[10000];
-        stream.read(buffer);
-        return buffer.toString();
-    }
-        
-    
-    
-
+       
     /**
      * @param args the command line arguments
      */
