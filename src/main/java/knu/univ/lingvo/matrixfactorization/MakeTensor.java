@@ -4,6 +4,7 @@
  */
 package knu.univ.lingvo.matrixfactorization;
 
+import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -44,6 +45,6 @@ public class MakeTensor {
             PATH = "/home/taras/Downloads/enwiki-latest-pages-articles.xml.bz2";
         else
             PATH = args[0];
-        MakeTensor mt = new MakeTensor(PATH, new FillMorePageHandler());
+        MakeTensor mt = new MakeTensor(PATH, new StanfordPageHandler());
     }
 }
