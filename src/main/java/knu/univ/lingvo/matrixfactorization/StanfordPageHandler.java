@@ -186,7 +186,7 @@ public class StanfordPageHandler implements PageHandler {
 
         for (Depency depency : deps) {
             if (depency.n1.equals(noRootS)) {
-                if (depency.type.startsWith("prep")) {
+                if (depency.type.startsWith("prep_")) {
                     String prep = depency.type.substring(5);
                     byPrepType.add(prep + " " + depency.w2);
                 }
