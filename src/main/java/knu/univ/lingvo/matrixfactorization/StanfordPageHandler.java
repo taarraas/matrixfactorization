@@ -180,17 +180,29 @@ public class StanfordPageHandler implements PageHandler {
         System.out.println("root : " + wordRoot + " #" + noRoot);
 
         Map<String, String> byType = new TreeMap<String, String>();
-        Set<String> byPrepType = new TreeSet<String>();
+        Map<String, Integer> byTypeNo = new TreeMap();
+        Map<String, Integer> byPrepType = new TreeMap();
 
         String xCompNoS = null;
 
         for (Depency depency : deps) {
+            int no = -1;
+            try {
+                no = Integer.valueOf(depency.n2);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+            if (no == -1) {
+                continue;
+            }
+            byTypeNo.put(depency.type, no);
             if (depency.n1.equals(noRootS)) {
                 if (depency.type.startsWith("prep_")) {
                     String prep = depency.type.substring(5);
-                    byPrepType.add(prep + " " + depency.w2);
+                    byPrepType.put(prep + " " + depency.w2, no);
                 }
                 if (indepTypes.contains(depency.type)) {
+
                     byType.put(depency.type, depency.w2);
                     if (depency.type.equals("xcomp")) {
                         xCompNoS = depency.n2;
@@ -200,13 +212,22 @@ public class StanfordPageHandler implements PageHandler {
         }
         if (xCompNoS != null) {
             for (Depency depency : deps) {
+                int no = -1;
+                try {
+                    no = Integer.valueOf(depency.n2);
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                }
+                if (no == -1) {
+                    continue;
+                }
+                byTypeNo.put(depency.type, no);
                 if (depency.n1.equals(xCompNoS)) {
-                    if (depency.type.startsWith("prep")) {
+                    if (depency.type.startsWith("prep_")) {
                         String prep = depency.type.substring(5);
-                        byPrepType.add(prep + " " + depency.w2);
+                        byPrepType.put(prep + " " + depency.w2, no);
                     }
-                    if (indepTypes.contains(depency.type) 
-                            && !byType.containsKey(depency.type)) {
+                    if (indepTypes.contains(depency.type)) {
                         byType.put(depency.type, depency.w2);
                     }
                 }
@@ -219,12 +240,13 @@ public class StanfordPageHandler implements PageHandler {
 
         System.out.println("Count : " + count);
         for (Map.Entry<String, String> entry : byType.entrySet()) {
-            System.out.println(entry.getKey() + " : " + entry.getValue());
+            String tag = tags.get(byTypeNo.get(entry.getKey()) - 1);
+            System.out.println(entry.getKey() + " : " + entry.getValue() + " (" + tag + ") #" + byTypeNo.get(entry.getKey()));
         }
-        for (String entry : byPrepType) {
-            System.out.println("Prep : " + entry);
+        for (Map.Entry<String, Integer> entry : byPrepType.entrySet()) {
+            String tag = tags.get(entry.getValue() - 1);
+            System.out.println("Prep : " + entry.getKey() + " (" + tag + ") #" + entry.getValue());
         }
-
 
         if (count < 2) {
             return;
@@ -241,7 +263,7 @@ public class StanfordPageHandler implements PageHandler {
             result = new Map[byPrepType.size()];
 
             int i = 0;
-            for (String string : byPrepType) {
+            for (String string : byPrepType.keySet()) {
                 result[i] = new TreeMap<String, String>();
                 result[i].putAll(r);
                 result[i].put("prep", string);
