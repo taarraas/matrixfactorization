@@ -141,7 +141,7 @@ public class StanfordPageHandler implements PageHandler {
             int c = str.indexOf(',', b);
             cur.n1 = str.substring(b + 1, c);
             int d = c + 1;
-            int e = str.indexOf('-', d);
+            int e = str.lastIndexOf('-');
             cur.w2 = str.substring(d + 1, e);
             int f = str.indexOf(')', e);
             cur.n2 = str.substring(e + 1, f);
