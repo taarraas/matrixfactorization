@@ -190,11 +190,20 @@ public class StanfordPageHandler implements PageHandler {
             try {
                 no = Integer.valueOf(depency.n2);
             } catch (NumberFormatException e) {
+                System.out.println("ERR:" + depency.n2);
                 e.printStackTrace();
             }
             if (no == -1) {
                 continue;
             }
+            String tag = tags.get(no - 1);
+            if (!depency.type.startsWith("prep_") && 
+                    !depency.type.equals("xcomp") &&
+                    !tag.startsWith("N"))
+            {
+                 continue;
+            }
+            
             byTypeNo.put(depency.type, no);
             if (depency.n1.equals(noRootS)) {
                 if (depency.type.startsWith("prep_")) {
@@ -248,7 +257,7 @@ public class StanfordPageHandler implements PageHandler {
             System.out.println("Prep : " + entry.getKey() + " (" + tag + ") #" + entry.getValue());
         }
 
-        if (count < 2) {
+        if (count < 3) {
             return;
         }
 
@@ -273,6 +282,7 @@ public class StanfordPageHandler implements PageHandler {
 
         String resultVec[] = {"root", "nsubj", "dobj", "iobj", "prep", "xcomp"};
         for (int i = 0; i < result.length; i++) {
+            good++;
             Map<String, String> map = result[i];
             StringBuffer cur = new StringBuffer();
             cur.append("(");
@@ -295,8 +305,11 @@ public class StanfordPageHandler implements PageHandler {
         //System.out.println("words: "+words); 
         //System.out.println("POStags: "+tags); 
         System.out.println("all deps : " + tdl);
-
+        System.out.println("" + good + "/" + overall + " = " + ((float)good/overall));
     }
+    
+    private static int overall = 0;
+    private static int good = 0;
 
     public void handle(String rawPage) {
         String plainStr = wikiModel.render(new PlainTextConverter(), rawPage);
@@ -308,6 +321,7 @@ public class StanfordPageHandler implements PageHandler {
             }
             String sentences[] = sentenceDetector.sentDetect(text);
             for (String sentence : sentences) {
+                overall++;
                 if (sentence.length() < 15) {
                     continue;
                 }
