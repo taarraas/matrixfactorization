@@ -176,8 +176,8 @@ public class StanfordPageHandler implements PageHandler {
             return;
         }
 
-        System.out.println(">> " + sentence);
-        System.out.println("root : " + wordRoot + " #" + noRoot);
+        //System.out.println(">> " + sentence);
+        //System.out.println("root : " + wordRoot + " #" + noRoot);
 
         Map<String, String> byType = new TreeMap<String, String>();
         Map<String, Integer> byTypeNo = new TreeMap();
@@ -221,7 +221,7 @@ public class StanfordPageHandler implements PageHandler {
                             }
                             wordSb.append(words.get(nnTo - 1));
                             word = wordSb.toString();// + " (" + word + ")";
-                            System.out.println("NNPGROUP : " + word);
+                            //System.out.println("NNPGROUP : " + word);
                         }
                     }
                 }
@@ -269,14 +269,14 @@ public class StanfordPageHandler implements PageHandler {
             count++;
         }
 
-        System.out.println("Count : " + count);
+        //System.out.println("Count : " + count);
         for (Map.Entry<String, String> entry : byType.entrySet()) {
             String tag = tags.get(byTypeNo.get(entry.getKey()) - 1);
-            System.out.println(entry.getKey() + " : " + entry.getValue() + " (" + tag + ") #" + byTypeNo.get(entry.getKey()));
+            //System.out.println(entry.getKey() + " : " + entry.getValue() + " (" + tag + ") #" + byTypeNo.get(entry.getKey()));
         }
         for (Map.Entry<String, Integer> entry : byPrepType.entrySet()) {
             String tag = tags.get(entry.getValue() - 1);
-            System.out.println("Prep : " + entry.getKey() + " (" + tag + ") #" + entry.getValue());
+            //System.out.println("Prep : " + entry.getKey() + " (" + tag + ") #" + entry.getValue());
         }
         
         if (count < 3) {
@@ -306,37 +306,39 @@ public class StanfordPageHandler implements PageHandler {
         for (int i = 0; i < result.length; i++) {
             good++;
             Map<String, String> map = result[i];
-            StringBuffer cur = new StringBuffer();
-            cur.append("(");
+            String[] resVec = new String[6];
             for (int j = 0; j < resultVec.length; j++) {
                 String string = resultVec[j];
                 String val = map.get(string);
-                if (val == null) {
-                    cur.append("0");
-                } else {
-                    cur.append(val);
-                }
-                if (j != resultVec.length - 1) {
-                    cur.append(", ");
-                }
+                resVec[j] = val;
             }
-            cur.append(")");
-            System.out.println("------------------------ " + cur.toString());
+            saveVector(resVec, 1);
         }
 
         //System.out.println("words: "+words); 
         //System.out.println("POStags: "+tags); 
-        System.out.println("all deps : " + tdl);
-        System.out.println("" + good + "/" + overall + " = " + ((float) good / overall));
+        //System.out.println("all deps : " + tdl);
     }
     
     private static int overall = 0;
     private static int good = 0;
+    
+    void saveVector(String[] vector, int weight)
+    {
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < vector.length; i++) {
+            String string = vector[i];
+            sb.append(string);
+            sb.append(" ");            
+        }
+        System.out.println(sb.toString());
+    }
 
     public void handle(String rawPage) {
         String plainStr = wikiModel.render(new PlainTextConverter(), rawPage);
         String woBrackets = plainStr.replaceAll("\\{\\{[^\\}]*\\}\\}", "");
         final String[] paragraphs = woBrackets.split("\\n");
+        boolean isFirstParagraph = true;
         for (String text : paragraphs) {
             if (text.length() < MINIMALPARAGRAPH) {
                 continue;
@@ -349,6 +351,7 @@ public class StanfordPageHandler implements PageHandler {
                 }
                 handleSentence(sentence);
             }
+            System.out.println("" + good + "/" + overall + " = " + ((float) good / overall));
         }
     }
 
