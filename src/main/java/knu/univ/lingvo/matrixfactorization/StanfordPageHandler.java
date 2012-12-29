@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -331,7 +332,11 @@ public class StanfordPageHandler implements PageHandler {
             sb.append(string);
             sb.append(" ");            
         }
-        DB.getInstance().saveVector(resultVec, vector, weight);
+        try {
+            DB.getInstance().saveVector(resultVec, vector, weight);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         System.out.println(sb.toString() + " " + weight);
     }
 
