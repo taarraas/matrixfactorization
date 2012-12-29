@@ -96,7 +96,7 @@ public class StanfordPageHandler implements PageHandler {
         }
     }
 
-    public void handleSentence(String sentence) {
+    public void handleSentence(String sentence, boolean isFirst) {
         StringReader sr = new StringReader(sentence);
         PTBTokenizer tkzr = PTBTokenizer.newPTBTokenizer(sr);
         List toks = tkzr.tokenize();
@@ -312,7 +312,7 @@ public class StanfordPageHandler implements PageHandler {
                 String val = map.get(string);
                 resVec[j] = val;
             }
-            saveVector(resVec, 1);
+            saveVector(resVec, isFirst ? 3 : 1);
         }
 
         //System.out.println("words: "+words); 
@@ -331,10 +331,11 @@ public class StanfordPageHandler implements PageHandler {
             sb.append(string);
             sb.append(" ");            
         }
-        System.out.println(sb.toString());
+        System.out.println(sb.toString() + " " + weight);
     }
 
     public void handle(String rawPage) {
+        System.out.println("new page");
         String plainStr = wikiModel.render(new PlainTextConverter(), rawPage);
         String woBrackets = plainStr.replaceAll("\\{\\{[^\\}]*\\}\\}", "");
         final String[] paragraphs = woBrackets.split("\\n");
@@ -348,8 +349,9 @@ public class StanfordPageHandler implements PageHandler {
                 overall++;
                 if (sentence.length() < 15) {
                     continue;
-                }
-                handleSentence(sentence);
+                }                
+                handleSentence(sentence, isFirstParagraph);
+                isFirstParagraph = false;
             }
             System.out.println("" + good + "/" + overall + " = " + ((float) good / overall));
         }
@@ -357,8 +359,8 @@ public class StanfordPageHandler implements PageHandler {
 
     public static void main(String argv[]) {
         StanfordPageHandler sph = new StanfordPageHandler();
-        sph.handleSentence("John gave Mary a book");
-        sph.handleSentence("Mary moved from NY to LA");
-        sph.handleSentence("My dog likes eating sausage");
+        sph.handleSentence("John gave Mary a book", false);
+        sph.handleSentence("Mary moved from NY to LA", false);
+        sph.handleSentence("My dog likes eating sausage", false);
     }
 }
