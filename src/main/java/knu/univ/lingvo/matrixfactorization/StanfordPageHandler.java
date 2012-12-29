@@ -197,13 +197,36 @@ public class StanfordPageHandler implements PageHandler {
                 continue;
             }
             String tag = tags.get(no - 1);
-            if (!depency.type.startsWith("prep_") && 
-                    !depency.type.equals("xcomp") &&
-                    !tag.startsWith("N"))
-            {
-                 continue;
+
+            String word = depency.w2;
+            if (!depency.type.startsWith("prep_")
+                    && !depency.type.equals("xcomp")) {
+                if (!tag.startsWith("N")) {
+                    continue;
+                } else {
+                    if (tag.equals("NNP")) {
+                        int nnFrom = no;
+                        int nnTo = no;
+                        while (nnFrom > 2 && tags.get(nnFrom - 2).equals("NNP")) {
+                            nnFrom--;
+                        }
+                        while (nnTo < tags.size() - 1 && tags.get(nnTo).equals("NNP")) {
+                            nnTo++;
+                        }
+                        if (nnTo != nnFrom) {
+                            StringBuffer wordSb = new StringBuffer();
+                            for (int i = nnFrom; i < nnTo; i++) {
+                                wordSb.append(words.get(i - 1));
+                                wordSb.append(" ");                                
+                            }
+                            wordSb.append(words.get(nnTo - 1));
+                            word = wordSb.toString();// + " (" + word + ")";
+                            System.out.println("NNPGROUP : " + word);
+                        }
+                    }
+                }
             }
-            
+
             byTypeNo.put(depency.type, no);
             if (depency.n1.equals(noRootS)) {
                 if (depency.type.startsWith("prep_")) {
@@ -211,8 +234,7 @@ public class StanfordPageHandler implements PageHandler {
                     byPrepType.put(prep + " " + depency.w2, no);
                 }
                 if (indepTypes.contains(depency.type)) {
-
-                    byType.put(depency.type, depency.w2);
+                    byType.put(depency.type, word);
                     if (depency.type.equals("xcomp")) {
                         xCompNoS = depency.n2;
                     }
@@ -256,11 +278,11 @@ public class StanfordPageHandler implements PageHandler {
             String tag = tags.get(entry.getValue() - 1);
             System.out.println("Prep : " + entry.getKey() + " (" + tag + ") #" + entry.getValue());
         }
-
+        
         if (count < 3) {
             return;
         }
-
+        
         Map<String, String> r = new TreeMap<String, String>();
         r.put("root", wordRoot);
         r.putAll(byType);
@@ -279,8 +301,8 @@ public class StanfordPageHandler implements PageHandler {
                 i++;
             }
         }
-
-        String resultVec[] = {"root", "nsubj", "dobj", "iobj", "prep", "xcomp"};
+        
+        String resultVec[] = {"root", "nsubj", "dobj", "iobj", "prep", "xcomp"};        
         for (int i = 0; i < result.length; i++) {
             good++;
             Map<String, String> map = result[i];
@@ -305,7 +327,7 @@ public class StanfordPageHandler implements PageHandler {
         //System.out.println("words: "+words); 
         //System.out.println("POStags: "+tags); 
         System.out.println("all deps : " + tdl);
-        System.out.println("" + good + "/" + overall + " = " + ((float)good/overall));
+        System.out.println("" + good + "/" + overall + " = " + ((float) good / overall));
     }
     
     private static int overall = 0;
