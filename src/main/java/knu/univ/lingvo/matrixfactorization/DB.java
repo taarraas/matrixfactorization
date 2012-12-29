@@ -40,10 +40,10 @@ public class DB {
         }
     }
     
-    public void increaseCountOfWord(String word) {
+    public void saveVector(String[] columns, String[] values, int weight) {
         
     }
-    
+     
     private static DB instance = new DB();
     
     public static DB getInstance() {

@@ -55,6 +55,7 @@ public class StanfordPageHandler implements PageHandler {
         }
     }
     String parserFileOrUrl = "englishPCFG.ser.gz";
+    public static String resultVec[] = {"root", "nsubj", "dobj", "iobj", "prep", "xcomp"};        
     SentenceDetector sentenceDetector;
     WordStemmer ls = new WordStemmer();
     LexicalizedParser lp = LexicalizedParser.getParserFromSerializedFile(parserFileOrUrl);
@@ -302,7 +303,6 @@ public class StanfordPageHandler implements PageHandler {
             }
         }
         
-        String resultVec[] = {"root", "nsubj", "dobj", "iobj", "prep", "xcomp"};        
         for (int i = 0; i < result.length; i++) {
             good++;
             Map<String, String> map = result[i];
@@ -331,6 +331,7 @@ public class StanfordPageHandler implements PageHandler {
             sb.append(string);
             sb.append(" ");            
         }
+        DB.getInstance().saveVector(resultVec, vector, weight);
         System.out.println(sb.toString() + " " + weight);
     }
 
