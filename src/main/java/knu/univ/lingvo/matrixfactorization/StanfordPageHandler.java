@@ -102,6 +102,11 @@ public class StanfordPageHandler implements PageHandler {
         StringReader sr = new StringReader(sentence);
         PTBTokenizer tkzr = PTBTokenizer.newPTBTokenizer(sr);
         List toks = tkzr.tokenize();
+	if (toks.size() > 100)
+	{
+		System.out.println("rejected by toks count");
+		return;
+	}
         Tree parse = (Tree) lp.apply(toks); // finally, we actually get to parse something
 
         // Output Option 1: Printing out various data by accessing it programmatically
