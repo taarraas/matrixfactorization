@@ -20,6 +20,7 @@ public class WikiPageHandler extends DefaultHandler {
     PageHandler innerHandler;
     boolean isInText = false;
     boolean isInTitle = false;
+    int count = 0;
     StringBuffer currentPage = new StringBuffer();
     StringBuffer currentTitle = new StringBuffer();
     
@@ -49,7 +50,8 @@ public class WikiPageHandler extends DefaultHandler {
            isInText = false;
         } else if (qName.compareToIgnoreCase("title") == 0)
         {
-            log.info("New page : " + currentTitle.toString());
+            count++;
+            log.info("New page # " + count + " : " + currentTitle.toString());
             isInTitle = false;
         }
     }
