@@ -35,12 +35,15 @@ import knu.univ.lingvo.analysis.Main;
 import opennlp.tools.sentdetect.SentenceDetector;
 import opennlp.tools.sentdetect.SentenceDetectorME;
 import opennlp.tools.sentdetect.SentenceModel;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author taras
  */
 public class StanfordPageHandler implements PageHandler {
+    
+    Logger log = Logger.getLogger("StanfordPageHandler");
 
     public static class Depency {
 
@@ -98,13 +101,13 @@ public class StanfordPageHandler implements PageHandler {
         }
     }
 
-    public void handleSentence(String sentence, boolean isFirst) {
+    public void handleSentence(String sentence, int addWeight) {
         StringReader sr = new StringReader(sentence);
         PTBTokenizer tkzr = PTBTokenizer.newPTBTokenizer(sr);
         List toks = tkzr.tokenize();
 	if (toks.size() > 100)
 	{
-		System.out.println("rejected by toks count");
+		log.warn("Rejected by toks count : " + sentence);
 		return;
 	}
         Tree parse = (Tree) lp.apply(toks); // finally, we actually get to parse something
@@ -197,7 +200,7 @@ public class StanfordPageHandler implements PageHandler {
             try {
                 no = Integer.valueOf(depency.n2);
             } catch (NumberFormatException e) {
-                System.out.println("ERR:" + depency.n2);
+                log.error(depency.n2 + e.toString());
                 e.printStackTrace();
             }
             if (no == -1) {
@@ -286,7 +289,7 @@ public class StanfordPageHandler implements PageHandler {
             //System.out.println("Prep : " + entry.getKey() + " (" + tag + ") #" + entry.getValue());
         }
         
-        if (count < 3) {
+        if (count < 2) {
             return;
         }
         
@@ -318,7 +321,7 @@ public class StanfordPageHandler implements PageHandler {
                 String val = map.get(string);
                 resVec[j] = val;
             }
-            saveVector(resVec, isFirst ? 3 : 1);
+            saveVector(resVec, addWeight + 1);
         }
 
         //System.out.println("words: "+words); 
@@ -342,36 +345,35 @@ public class StanfordPageHandler implements PageHandler {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        System.out.println(sb.toString() + " " + weight);
+        log.info(sb.toString() + " " + weight);
     }
 
     public void handle(String rawPage) {
-        System.out.println("new page");
-        String plainStr = wikiModel.render(new PlainTextConverter(), rawPage);
+        String woTranslate = rawPage.replaceAll("(\\[\\[[^\\]]+\\]\\]\n)*\\[\\[[^\\]]+\\]\\]$", "");
+        String plainStr = wikiModel.render(new PlainTextConverter(), woTranslate);
         String woBrackets = plainStr.replaceAll("\\{\\{[^\\}]*\\}\\}", "");
-        final String[] paragraphs = woBrackets.split("\\n");
+        final String[] paragraphs = woBrackets.split("\\n+");
         boolean isFirstParagraph = true;
+        boolean isFirstSentence = true;
         for (String text : paragraphs) {
-            if (text.length() < MINIMALPARAGRAPH) {
+            if (text.isEmpty())
                 continue;
-            }
+            
             String sentences[] = sentenceDetector.sentDetect(text);
             for (String sentence : sentences) {
                 overall++;
-                if (sentence.length() < 15) {
-                    continue;
-                }                
-                handleSentence(sentence, isFirstParagraph);
-                isFirstParagraph = false;
+                handleSentence(sentence, (isFirstSentence ? 1 : 0) + (isFirstParagraph ? 1 : 0) );
+                isFirstSentence = false;
             }
-            System.out.println("" + good + "/" + overall + " = " + ((float) good / overall));
+            isFirstParagraph = false;            
         }
+        log.info("" + good + "/" + overall + " = " + ((float) good / overall));
     }
 
     public static void main(String argv[]) {
         StanfordPageHandler sph = new StanfordPageHandler();
-        sph.handleSentence("John gave Mary a book", false);
-        sph.handleSentence("Mary moved from NY to LA", false);
-        sph.handleSentence("My dog likes eating sausage", false);
+        sph.handleSentence("John gave Mary a book", 0);
+        sph.handleSentence("Mary moved from NY to LA", 1);
+        sph.handleSentence("My dog likes eating sausage", 2);
     }
 }
