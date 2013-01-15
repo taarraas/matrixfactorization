@@ -105,7 +105,7 @@ public class StanfordPageHandler implements PageHandler {
         StringReader sr = new StringReader(sentence);
         PTBTokenizer tkzr = PTBTokenizer.newPTBTokenizer(sr);
         List toks = tkzr.tokenize();
-	if (toks.size() > 100)
+	if (toks.size() > 100 || toks.size() < 3)
 	{
 		log.warn("Rejected by toks count : " + sentence);
 		return;
