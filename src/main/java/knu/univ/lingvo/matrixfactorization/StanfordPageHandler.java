@@ -132,9 +132,15 @@ public class StanfordPageHandler implements PageHandler {
         }
 
         // Get dependency tree
-        TreebankLanguagePack tlp = new PennTreebankLanguagePack();
-        GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
-        GrammaticalStructure gs = gsf.newGrammaticalStructure(parse);
+        GrammaticalStructure gs;
+        try {
+            TreebankLanguagePack tlp = new PennTreebankLanguagePack();
+            GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
+             gs = gsf.newGrammaticalStructure(parse);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            return;
+        }
         Collection<TypedDependency> tdl = gs.typedDependenciesCollapsed();
 
         TreeGraphNode tgn = gs.root();
