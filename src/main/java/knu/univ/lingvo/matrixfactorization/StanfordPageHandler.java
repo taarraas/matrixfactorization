@@ -354,7 +354,7 @@ public class StanfordPageHandler implements PageHandler {
         log.info(sb.toString() + " " + weight);
     }
 
-    public void handle(String rawPage) {
+    public void handle(String rawPage, String title) {
         String woTranslate = rawPage.replaceAll("(\\[\\[[^\\]]+\\]\\]\n)*\\[\\[[^\\]]+\\]\\]$", "");
         String plainStr = wikiModel.render(new PlainTextConverter(), woTranslate);
         String woBrackets = plainStr.replaceAll("\\{\\{[^\\}]*\\}\\}", "");

@@ -19,7 +19,7 @@ public class FillMorePageHandler implements PageHandler {
     private static final int MINIMALPARAGRAPH = 50;
     WikiModel wikiModel = new WikiModel("http://www.mywiki.com/wiki/${image}", "http://www.mywiki.com/wiki/${title}");
 
-    public void handle(String rawPage) {
+    public void handle(String rawPage, String title) {
         String plainStr = wikiModel.render(new PlainTextConverter(), rawPage);
         String woBrackets = plainStr.replaceAll("\\{\\{[^\\}]*\\}\\}", "");
         final String[] paragraphs = woBrackets.split("\\n");

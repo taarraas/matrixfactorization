@@ -54,6 +54,19 @@ public class DB {
         st.executeUpdate();
         return saveWord(word);
     }
+    
+    public void saveArticle(String word) throws SQLException {
+        PreparedStatement st = con.prepareStatement("SELECT title FROM articles where title = ?");
+        st.setString(1, word);
+        ResultSet rs = st.executeQuery();
+        if (rs.next()) { //exists
+            return;
+        }
+
+        st = con.prepareStatement("INSERT INTO articles (title) VALUES(?)");
+        st.setString(1, word);
+        st.executeUpdate();
+    }
 
     public void saveVector(String[] columns, String[] values, int weight) throws SQLException {
         assert (columns.length == values.length);
@@ -118,8 +131,9 @@ public class DB {
     }
 
     public static void main(String[] args) throws Exception {
-        System.out.println("" + getInstance().saveWord("first word"));
-        System.out.println("" + getInstance().saveWord("first wor"));
-        System.out.println("" + getInstance().saveWord("first word"));
+        //System.out.println("" + getInstance().saveWord("first word"));
+        //System.out.println("" + getInstance().saveWord("first wor"));
+        //System.out.println("" + getInstance().saveWord("first word"));
+        getInstance().saveArticle("first article");
     }
 }

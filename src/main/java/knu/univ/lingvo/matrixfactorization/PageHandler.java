@@ -9,5 +9,5 @@ package knu.univ.lingvo.matrixfactorization;
  * @author taras
  */
 public interface PageHandler {
-    void handle(String page);
+    void handle(String page, String title);
 }

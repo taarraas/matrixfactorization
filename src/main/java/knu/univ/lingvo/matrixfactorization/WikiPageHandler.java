@@ -73,7 +73,7 @@ public class WikiPageHandler extends DefaultHandler {
     public void endElement(String uri, String localName, String qName) throws SAXException {
         if (qName.compareToIgnoreCase("text") == 0) {
             if (articleShouldBeProcessed) {
-                innerHandler.handle(currentPage.toString());
+                innerHandler.handle(currentPage.toString(), getLast());
             }
             isInText = false;
         } else if (qName.compareToIgnoreCase("title") == 0) {
