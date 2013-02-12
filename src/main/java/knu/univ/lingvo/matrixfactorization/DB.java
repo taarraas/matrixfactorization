@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import knu.univ.lingvo.wikiner.Vocabulary;
 
 /**
  *
@@ -23,6 +24,8 @@ public class DB {
     String user = "taras";
     String password = "tarastaras";
     Connection con = null;
+    org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger("DB");
+
 
     private DB() {
         try {
@@ -54,7 +57,7 @@ public class DB {
         st.executeUpdate();
         return saveWord(word);
     }
-    
+
     public void saveArticle(String word) throws SQLException {
         PreparedStatement st = con.prepareStatement("SELECT title FROM articles where title = ?");
         st.setString(1, word);
@@ -73,10 +76,11 @@ public class DB {
 
         int valNo[] = new int[values.length];
         for (int i = 0; i < valNo.length; i++) {
-            if (values[i] != null)
+            if (values[i] != null) {
                 valNo[i] = saveWord(values[i]);
-            else
+            } else {
                 valNo[i] = -1;
+            }
         }
 
         StringBuffer query = new StringBuffer();
@@ -112,11 +116,11 @@ public class DB {
             for (int i = 0; i < columns.length; i++) {
                 query.append(columns[i] + ", ");
             }
-            query.append("count) values (");            
+            query.append("count) values (");
             for (int i = 0; i < columns.length; i++) {
                 query.append(valNo[i] + ", ");
             }
-            
+
             query.append(weight + ");");
 
             st = con.createStatement();
@@ -128,6 +132,36 @@ public class DB {
 
     public static DB getInstance() {
         return instance;
+    }
+
+    private static final int STEP = 10000;
+    public void fillVocabulary(Vocabulary v) {
+        int from = 0;
+        int actualCnt = 0;
+        for (;;) {
+            try {
+                PreparedStatement st = con.prepareStatement("SELECT title FROM articles OFFSET ? LIMIT ?");
+                st.setInt(1, from);
+                st.setInt(2, STEP);
+                from += STEP;
+                ResultSet rs = st.executeQuery();
+                int oldCnt = actualCnt;
+                while (rs.next()) {
+                    String title = rs.getString("title");
+                    actualCnt++;
+                    v.add(title);
+                }
+                log.info("Loaded " + actualCnt + " words for NER");
+                if (oldCnt == actualCnt)
+                {
+                    log.info("NER data was loaded");
+                    return;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        
     }
 
     public static void main(String[] args) throws Exception {
