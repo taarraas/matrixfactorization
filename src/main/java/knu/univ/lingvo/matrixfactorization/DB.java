@@ -134,25 +134,26 @@ public class DB {
         return instance;
     }
 
-    private static final int STEP = 10000;
+    private static final int STEP = 100000;
     public void fillVocabulary(NER v) {
-        int from = 0;
-        int actualCnt = 0;
+        String lastWord = "";
         for (;;) {
             try {
-                PreparedStatement st = con.prepareStatement("SELECT title FROM articles ORDER BY title OFFSET ? LIMIT ?");
-                st.setInt(1, from);
+                PreparedStatement st = con.prepareStatement("SELECT title FROM articles WHERE title > ? ORDER BY title  LIMIT ?");
+                st.setString(1, lastWord);
                 st.setInt(2, STEP);
-                from += STEP;
+                log.info("Query started");
                 ResultSet rs = st.executeQuery();
-                int oldCnt = actualCnt;
+                log.info("Query finished");
+                boolean hasNew = false;
                 while (rs.next()) {
                     String title = rs.getString("title");
-                    actualCnt++;
+                    hasNew = true;
                     v.add(title);
+                    lastWord = title;
                 }
                 log.info("Loaded " + v.size() + " words for NER");
-                if (oldCnt == actualCnt)
+                if (!hasNew)
                 {
                     log.info("NER data was loaded");
                     return;
