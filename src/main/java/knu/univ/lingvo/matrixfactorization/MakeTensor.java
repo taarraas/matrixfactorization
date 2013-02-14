@@ -13,6 +13,7 @@ import java.util.Map;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import knu.univ.lingvo.analysis.Main;
+import knu.univ.lingvo.wikiner.NER;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.xml.sax.SAXException;
 
@@ -40,11 +41,13 @@ public class MakeTensor {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws Exception {
+        NER v = new NER();
+        DB.getInstance().fillVocabulary(v);
         String PATH;
         if (args.length == 0)
             PATH = "/home/taras/Downloads/enwiki-latest-pages-articles.xml.bz2";
         else
             PATH = args[0];
-        MakeTensor mt = new MakeTensor(PATH, new StanfordPageHandler());
+        MakeTensor mt = new MakeTensor(PATH, new StanfordPageHandler(v));
     }
 }

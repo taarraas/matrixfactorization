@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import knu.univ.lingvo.wikiner.Vocabulary;
+import knu.univ.lingvo.wikiner.NER;
 
 /**
  *
@@ -135,14 +135,14 @@ public class DB {
     }
 
     private static final int STEP = 10000;
-    public void fillVocabulary(Vocabulary v) {
+    public void fillVocabulary(NER v) {
         int from = 0;
         int actualCnt = 0;
         for (;;) {
             try {
                 PreparedStatement st = con.prepareStatement("SELECT title FROM articles OFFSET ? LIMIT ?");
                 st.setInt(1, from);
-                st.setInt(2, STEP);
+                st.setInt(2, STEP + STEP / 20);
                 from += STEP;
                 ResultSet rs = st.executeQuery();
                 int oldCnt = actualCnt;
@@ -151,7 +151,11 @@ public class DB {
                     actualCnt++;
                     v.add(title);
                 }
-                log.info("Loaded " + actualCnt + " words for NER");
+                if (actualCnt > 100000)
+                {
+                    return;
+                }
+                log.info("Loaded " + v.size() + " words for NER");
                 if (oldCnt == actualCnt)
                 {
                     log.info("NER data was loaded");

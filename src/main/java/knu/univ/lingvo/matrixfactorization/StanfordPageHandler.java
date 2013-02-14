@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import knu.univ.lingvo.analysis.Main;
+import knu.univ.lingvo.wikiner.NER;
 import opennlp.tools.sentdetect.SentenceDetector;
 import opennlp.tools.sentdetect.SentenceDetectorME;
 import opennlp.tools.sentdetect.SentenceModel;
@@ -58,14 +59,17 @@ public class StanfordPageHandler implements PageHandler {
             return type + ":" + w1 + ":" + n1 + ":" + w2 + ":" + n2;
         }
     }
+    
+    NER ner;
     String parserFileOrUrl = "englishPCFG.ser.gz";
     public static String resultVec[] = {"root", "nsubj", "dobj", "iobj", "prep", "xcomp"};        
     SentenceDetector sentenceDetector;
     WordStemmer ls = new WordStemmer();
     LexicalizedParser lp = LexicalizedParser.getParserFromSerializedFile(parserFileOrUrl);
 
-    public StanfordPageHandler() {
+    public StanfordPageHandler(NER ner) {
         initSentenceDetect();
+        this.ner = ner;
     }
 
     void initSentenceDetect() {
@@ -100,7 +104,18 @@ public class StanfordPageHandler implements PageHandler {
             indepTypes.add(string);
         }
     }
-
+    
+    
+    private int str2int(String a) {
+            try {
+                return Integer.valueOf(a);
+            } catch (NumberFormatException e) {
+                log.error(a + e.toString());
+                e.printStackTrace();
+            }
+            return -1;
+    }
+    
     public void handleSentence(String sentence, int addWeight) {
         StringReader sr = new StringReader(sentence);
         PTBTokenizer tkzr = PTBTokenizer.newPTBTokenizer(sr);
@@ -202,52 +217,22 @@ public class StanfordPageHandler implements PageHandler {
         String xCompNoS = null;
 
         for (Depency depency : deps) {
-            int no = -1;
-            try {
-                no = Integer.valueOf(depency.n2);
-            } catch (NumberFormatException e) {
-                log.error(depency.n2 + e.toString());
-                e.printStackTrace();
-            }
-            if (no == -1) {
+            int no = str2int(depency.n2);
+            if (no == -1)
                 continue;
-            }
+            
             String tag = tags.get(no - 1);
 
             String word = depency.w2;
-            if (!depency.type.startsWith("prep_")
-                    && !depency.type.equals("xcomp")) {
-                if (!tag.startsWith("N")) {
-                    continue;
-                } else {
-                    if (tag.equals("NNP")) {
-                        int nnFrom = no;
-                        int nnTo = no;
-                        while (nnFrom > 2 && tags.get(nnFrom - 2).equals("NNP")) {
-                            nnFrom--;
-                        }
-                        while (nnTo < tags.size() - 1 && tags.get(nnTo).equals("NNP")) {
-                            nnTo++;
-                        }
-                        if (nnTo != nnFrom) {
-                            StringBuffer wordSb = new StringBuffer();
-                            for (int i = nnFrom; i < nnTo; i++) {
-                                wordSb.append(words.get(i - 1));
-                                wordSb.append(" ");                                
-                            }
-                            wordSb.append(words.get(nnTo - 1));
-                            word = wordSb.toString();// + " (" + word + ")";
-                            //System.out.println("NNPGROUP : " + word);
-                        }
-                    }
-                }
-            }
+            if (tag.startsWith("N"))
+                word = ner.nerIt(words, no - 1);
 
             byTypeNo.put(depency.type, no);
+            
             if (depency.n1.equals(noRootS)) {
                 if (depency.type.startsWith("prep_")) {
                     String prep = depency.type.substring(5);
-                    byPrepType.put(prep + " " + depency.w2, no);
+                    byPrepType.put(prep + " " + word, no);
                 }
                 if (indepTypes.contains(depency.type)) {
                     byType.put(depency.type, word);
@@ -257,6 +242,7 @@ public class StanfordPageHandler implements PageHandler {
                 }
             }
         }
+        
         if (xCompNoS != null) {
             for (Depency depency : deps) {
                 int no = -1;
@@ -377,7 +363,10 @@ public class StanfordPageHandler implements PageHandler {
     }
 
     public static void main(String argv[]) {
-        StanfordPageHandler sph = new StanfordPageHandler();
+        NER v = new NER();
+        DB.getInstance().fillVocabulary(v);
+
+        StanfordPageHandler sph = new StanfordPageHandler(v);
         sph.handleSentence("John gave Mary a book", 0);
         sph.handleSentence("Mary moved from NY to LA", 1);
         sph.handleSentence("My dog likes eating sausage", 2);
