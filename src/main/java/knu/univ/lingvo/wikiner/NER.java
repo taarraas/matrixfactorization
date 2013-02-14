@@ -14,15 +14,15 @@ import knu.univ.lingvo.matrixfactorization.DB;
 public class NER {
     org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger("NER");
 
-    private static final int NER_DEPTH = 2;
+    private static final int NER_DEPTH = 4;
     Set<String> data = new TreeSet<String>();
 
     public void add(String wordCombination) {
-        data.add(wordCombination.toLowerCase());
+        data.add(wordCombination);
     }
 
     public boolean has(String wordCombination) {
-        return data.contains(wordCombination.toLowerCase());
+        return data.contains(wordCombination);
     }
 
     public int size() {

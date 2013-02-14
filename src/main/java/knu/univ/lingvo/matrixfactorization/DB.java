@@ -140,9 +140,9 @@ public class DB {
         int actualCnt = 0;
         for (;;) {
             try {
-                PreparedStatement st = con.prepareStatement("SELECT title FROM articles OFFSET ? LIMIT ?");
+                PreparedStatement st = con.prepareStatement("SELECT title FROM articles ORDER BY title OFFSET ? LIMIT ?");
                 st.setInt(1, from);
-                st.setInt(2, STEP + STEP / 20);
+                st.setInt(2, STEP);
                 from += STEP;
                 ResultSet rs = st.executeQuery();
                 int oldCnt = actualCnt;
@@ -150,10 +150,6 @@ public class DB {
                     String title = rs.getString("title");
                     actualCnt++;
                     v.add(title);
-                }
-                if (actualCnt > 100000)
-                {
-                    return;
                 }
                 log.info("Loaded " + v.size() + " words for NER");
                 if (oldCnt == actualCnt)
