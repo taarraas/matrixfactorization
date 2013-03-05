@@ -354,7 +354,12 @@ public class StanfordPageHandler implements PageHandler {
             String sentences[] = sentenceDetector.sentDetect(text);
             for (String sentence : sentences) {
                 overall++;
-                handleSentence(sentence, (isFirstSentence ? 1 : 0) + (isFirstParagraph ? 1 : 0) );
+                try {
+                    handleSentence(sentence, (isFirstSentence ? 1 : 0) + (isFirstParagraph ? 1 : 0) );
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                    log.error(e.getMessage());
+                }
                 isFirstSentence = false;
             }
             isFirstParagraph = false;            
