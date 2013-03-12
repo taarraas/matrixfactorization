@@ -77,9 +77,9 @@ public class MakeTensorReuters {
                 formattedBody = formattedBody.replaceAll("\\&lt\\;", "");
                 formattedBody = formattedBody.replaceAll("\\>", "");
                 formattedBody = formattedBody.replaceAll("REUTER.*", "");
-                System.out.println("<new article>");
-                System.out.println(formattedBody);
-//                handler.handle(formattedBody, title);
+//                System.out.println("<new article>");
+//                System.out.println(formattedBody);
+                handler.handle(formattedBody, title);
             }
             // ignore the part just read
             text = text.substring(end + "</BODY>".length());
@@ -87,6 +87,7 @@ public class MakeTensorReuters {
     }
 
     public MakeTensorReuters(String path, PageHandler handler) throws Exception {
+        this.handler = handler;
         File files[] = (new File(path)).listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 return name.endsWith(".sgm");
@@ -103,7 +104,7 @@ public class MakeTensorReuters {
      */
     public static void main(String[] args) throws Exception {
         NER v = new NER();
-        //DB.getInstance().fillVocabulary(v);
+        DB.getInstance().fillVocabulary(v);
         String PATH;
         if (args.length == 0) {
             PATH = "/home/taras/Downloads/enwiki-latest-pages-articles.xml.bz2";
