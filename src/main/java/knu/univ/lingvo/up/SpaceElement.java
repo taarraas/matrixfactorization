@@ -20,6 +20,9 @@ public class SpaceElement {
     private Type type;
 
     public SpaceElement(Object left, Object right, Type type) {
+        if (left == null || right == null) {
+            throw new RuntimeException();
+        }
         this.left = left;
         this.right = right;
         this.type = type;

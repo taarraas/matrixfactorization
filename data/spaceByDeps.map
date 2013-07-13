@@ -3,7 +3,7 @@ acomp b
 advcl ab
 advmod ab
 agent b
-amod ab
+amod ab*
 attr a*
 aux ab
 auxpass ab
