@@ -53,11 +53,13 @@ public class SpaceForSentenceCreator {
 
                     if (i1 == iL && i2 == iR) {
                         DepencyToSpaceType.Type type = dtst.getTypeFor(typedDependency.reln().getShortName());
+                        type.setFirstMain(true);
                         return type;
                     }
                     if (i2 == iL && i1 == iR) {
                         DepencyToSpaceType.Type type = dtst.getTypeFor(typedDependency.reln().getShortName());
                         type.setDirectOrder(!type.isDirectOrder());
+                        type.setFirstMain(false);
                         return type;
                     }
                 }
@@ -66,28 +68,47 @@ public class SpaceForSentenceCreator {
         return null;
     }
 
-    private SpaceElement combinePair(Object s1, Object s2, Tree t1, Tree t2) {
+    private SpaceElement combinePair(Object s1, Object s2, Tree t1, Tree t2, String rootTag) {
         DepencyToSpaceType.Type type = getType(t1, t2);
         if (type == null) {
             return null;
         }
-
-        if (type.isDirectOrder()) {
-            return new SpaceElement(s1, s2, type.getType());
+        
+        String word;
+        String tag;
+        if (type.isFirstMain()) {
+            if (s1 instanceof SpaceElement) {
+                word = ((SpaceElement) s1).getWord();
+            } else {
+                word = (String) s1;
+            }
+            tag = t1.nodeString();
         } else {
-            return new SpaceElement(s2, s1, type.getType());
+            if (s2 instanceof SpaceElement) {
+                word = ((SpaceElement) s2).getWord();
+            } else {
+                word = (String) s2;
+            }
+            tag = t2.nodeString();
+        }
+        tag = rootTag;
+        
+        if (type.isDirectOrder()) {
+            return new SpaceElement(s1, s2, type.getType(), tag, word);
+        } else {
+            return new SpaceElement(s2, s1, type.getType(), tag, word);
         }
     }
 
-    private SpaceElement combineOneLevel(Object[] si, Tree[] ti) {
+    private SpaceElement combineOneLevel(Object[] si, Tree[] ti, String rootTag) {
         if (si.length != ti.length) {
             throw new RuntimeException("Fail");
         }
         if (si.length == 1) {
             return (SpaceElement) si[0];
         }
-        
-        ArrayList<ArrayList<Tree> > t = new ArrayList();
+
+        ArrayList<ArrayList<Tree>> t = new ArrayList();
         ArrayList s = new ArrayList();
         for (int i = 0; i < ti.length; i++) {
             Tree tree = ti[i];
@@ -96,28 +117,30 @@ public class SpaceForSentenceCreator {
             t.add(treelist);
             s.add(si[i]);
         }
-        
-        
+
+
         while (s.size() > 1) {
             boolean isChanged = false;
             for (int i = s.size() - 2; i >= 0; i--) {
                 ArrayList<Tree> t1 = t.get(i);
-                ArrayList<Tree> t2 = t.get(i+1);
+                ArrayList<Tree> t2 = t.get(i + 1);
                 SpaceElement ss = null;
                 for (Tree tree : t1) {
                     for (Tree tree1 : t2) {
-                        ss = combinePair(s.get(i), s.get(i+1), tree, tree1);
-                        if (ss != null)
+                        ss = combinePair(s.get(i), s.get(i + 1), tree, tree1, rootTag);
+                        if (ss != null) {
                             break;
+                        }
                     }
-                    if (ss != null)
+                    if (ss != null) {
                         break;
+                    }
                 }
-                
+
                 if (ss != null) {
                     isChanged = true;
-                    t.remove(i+1);
-                    s.remove(i+1);
+                    t.remove(i + 1);
+                    s.remove(i + 1);
                     t1.addAll(t2);
                     s.set(i, ss);
                     break;
@@ -126,24 +149,38 @@ public class SpaceForSentenceCreator {
             if (!isChanged) {
                 break;
             }
-            
+
         }
-        
+
         while (s.size() > 1) {
             int i1 = s.size() - 2;
             int i2 = s.size() - 1;
-            s.set(i1, new SpaceElement(s.get(i1), s.get(i2), SpaceElement.Type.Unknown));
+            String word;
+            String tag;
+            if (s.get(i2) instanceof SpaceElement) {
+                word = ((SpaceElement) s.get(i2)).getWord();
+                tag = rootTag;//((SpaceElement) s.get(i2)).getTag();
+            } else {
+                word = (String) s.get(i2);
+                tag = rootTag;//"UNK";
+            }
+
+            s.set(i1,
+                    new SpaceElement(s.get(i1), s.get(i2), SpaceElement.Type.AB, tag, word));
             s.remove(i2);
+            t.remove(i2);
         }
-        return (SpaceElement)s.get(0);
+        return (SpaceElement) s.get(0);
     }
-    
     public static Set<String> punctuation = new HashSet<String>();
+
     static {
         punctuation.add("(. .)");
         punctuation.add("(, ,)");
         punctuation.add("(; ;)");
-    };
+    }
+
+    ;
 
     private Object buildRecursive(Tree p) {
         if (p.isLeaf()) {
@@ -158,11 +195,11 @@ public class SpaceForSentenceCreator {
                 noPunctuation.add(tree);
             }
         }
-        
+
         if (noPunctuation.isEmpty()) {
             return null;
         }
-        
+
         if (noPunctuation.size() == 1) {
             return buildRecursive(noPunctuation.get(0));
         }
@@ -176,7 +213,8 @@ public class SpaceForSentenceCreator {
             }
         }
 
-        SpaceElement s = combineOneLevel(elems, noPunctuation.toArray(new Tree[0]));        
+        SpaceElement s = combineOneLevel(elems, noPunctuation.toArray(new Tree[0]), p.nodeString());
+        //s.setTag(p.pennString());
         return s;
     }
 
@@ -201,7 +239,7 @@ public class SpaceForSentenceCreator {
 
     public static void main(String argv[]) {
         SpaceForSentenceCreator sfsc = new SpaceForSentenceCreator();
-        SpaceElement space = sfsc.getSpace("The strongest rain ever recorded in India shut down the financial hub of Mumbai, snapped communication lines, closed airports and forced thousands of people to sleep in their offices or walk home during the night, officials said today.");
+        SpaceElement space = sfsc.getSpace("The strongest rain ever recorded in India shut down the financial hub of Mumbai, snapped communication lines, closed airports and forced thousands of people to sleep in their offices.");
         System.out.println(space.toString());
     }
 }

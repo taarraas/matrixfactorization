@@ -18,6 +18,15 @@ public class DepencyToSpaceType {
     public static class Type {
         SpaceElement.Type type;
         boolean directOrder;
+        boolean firstMain;
+
+        public boolean isFirstMain() {
+            return firstMain;
+        }
+
+        public void setFirstMain(boolean firstMain) {
+            this.firstMain = firstMain;
+        }
 
         public boolean isDirectOrder() {
             return directOrder;
@@ -34,6 +43,7 @@ public class DepencyToSpaceType {
         public Type(SpaceElement.Type type, boolean directOrder) {
             this.type = type;
             this.directOrder = directOrder;
+            this.firstMain = true;
         }
 
 

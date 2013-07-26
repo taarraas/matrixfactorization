@@ -18,8 +18,10 @@ public class SpaceElement {
     private Object left;
     private Object right;
     private Type type;
+    private String tag;
+    private String word;
 
-    public SpaceElement(Object left, Object right, Type type) {
+    public SpaceElement(Object left, Object right, Type type, String tag, String word) {
         if (left == null || right == null) {
             throw new RuntimeException();
         }
@@ -28,9 +30,26 @@ public class SpaceElement {
         this.type = type;
         assert(left.getClass().getName() == "String" || left.getClass().getName() == "SpaceElement");
         assert(right.getClass().getName() == "String" || right.getClass().getName() == "SpaceElement");
+        
+        this.tag = tag;
+        this.word = word;
+        System.out.println(tag.substring(0, 2) + " " + word + " : " + toString());
     }
     
     public String toString() {
         return type.toString() + "( " + left.toString() + ", " + right.toString() + " )";
     }
+
+    public String getWord() {
+        return word;
+    }
+
+    public String getTag() {
+        return tag;
+    }
+
+    public void setTag(String tag) {
+        this.tag = tag;
+    }
+    
 }
