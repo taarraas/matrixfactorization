@@ -67,32 +67,64 @@ public class SpaceForSentenceCreator {
         }
         return null;
     }
+    static Set<String> PREPOSITIONS = new HashSet<String>();
+
+    static {
+        PREPOSITIONS.add("IN");
+        PREPOSITIONS.add("OF");
+        PREPOSITIONS.add("ON");
+        PREPOSITIONS.add("AT");
+        PREPOSITIONS.add("AFTER");
+    }
 
     private SpaceElement combinePair(Object s1, Object s2, Tree t1, Tree t2, String rootTag) {
         DepencyToSpaceType.Type type = getType(t1, t2);
-        if (type == null) {
-            return null;
+
+        String w1;
+        if (s1 instanceof SpaceElement) {
+            w1 = ((SpaceElement) s1).getWord();
+        } else {
+            w1 = (String) s1;
         }
-        
+        String w2;
+        String tag1 = t1.nodeString().split("\\ ")[0];
+        String tag2 = t2.nodeString().split("\\ ")[0];
+
+        if (s2 instanceof SpaceElement) {
+            w2 = ((SpaceElement) s2).getWord();
+        } else {
+            w2 = (String) s2;
+        }
+
         String word;
         String tag;
-        if (type.isFirstMain()) {
-            if (s1 instanceof SpaceElement) {
-                word = ((SpaceElement) s1).getWord();
-            } else {
-                word = (String) s1;
-            }
-            tag = t1.nodeString();
-        } else {
-            if (s2 instanceof SpaceElement) {
-                word = ((SpaceElement) s2).getWord();
-            } else {
-                word = (String) s2;
-            }
-            tag = t2.nodeString();
-        }
         tag = rootTag;
+
+        if (PREPOSITIONS.contains(tag1)) {
+            type = new DepencyToSpaceType.Type(SpaceElement.Type.AB, true);
+            word = w1 + "_" + w2;
+        } else if (PREPOSITIONS.contains(tag1)) {
+            type = new DepencyToSpaceType.Type(SpaceElement.Type.AB, false);
+            word = w2 + "_" + w2;
+        } else {
+            if (type == null) {
+                return null;
+            }
+            if (type.isFirstMain()) {
+                word = w1;
+            } else {
+                word = w2;
+            }
+        }
         
+        if (type.isShouldMerge()) {
+            if (type.firstMain) {
+                word = w1 + "_" + w2;
+            } else {
+                word = w2 + "_" + w1;
+            }
+        }
+
         if (type.isDirectOrder()) {
             return new SpaceElement(s1, s2, type.getType(), tag, word);
         } else {

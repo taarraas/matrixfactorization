@@ -19,6 +19,15 @@ public class DepencyToSpaceType {
         SpaceElement.Type type;
         boolean directOrder;
         boolean firstMain;
+        boolean shouldMerge;
+
+        public boolean isShouldMerge() {
+            return shouldMerge;
+        }
+
+        public void setShouldMerge(boolean shouldMerge) {
+            this.shouldMerge = shouldMerge;
+        }
 
         public boolean isFirstMain() {
             return firstMain;
@@ -44,6 +53,7 @@ public class DepencyToSpaceType {
             this.type = type;
             this.directOrder = directOrder;
             this.firstMain = true;
+            this.shouldMerge = false;
         }
 
 
@@ -75,17 +85,21 @@ public class DepencyToSpaceType {
                 } else if (subs[1].startsWith("b")) {
                     t = SpaceElement.Type.B;
                 } 
-                typeMap.put(subs[0], new Type(t, isDirect));                
+                typeMap.put(subs[0], new Type(t, isDirect));
             }
         } catch (IOException e) {
             e.printStackTrace();
         } 
+        
     }
     
     private Map<String, Type> typeMap = new HashMap<String, Type>();
     
     public Type getTypeFor(String stanfordType) {
         Type s = typeMap.get(stanfordType);
-        return new Type(s.getType(), s.isDirectOrder());
+        Type copied = new Type(s.getType(), s.isDirectOrder());
+        if (stanfordType.equalsIgnoreCase("prt"))
+            copied.setShouldMerge(true);
+        return copied;
     }
 }

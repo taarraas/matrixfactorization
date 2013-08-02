@@ -31,13 +31,13 @@ public class SpaceElement {
         assert(left.getClass().getName() == "String" || left.getClass().getName() == "SpaceElement");
         assert(right.getClass().getName() == "String" || right.getClass().getName() == "SpaceElement");
         
-        this.tag = tag;
+        this.tag = tag.split("\\ ")[0];
         this.word = word;
-        System.out.println(tag.substring(0, 2) + " " + word + " : " + toString());
+        System.out.println(toString());
     }
     
     public String toString() {
-        return type.toString() + "( " + left.toString() + ", " + right.toString() + " )";
+        return type.toString() + ":" + word + ":" + tag + "( " + left.toString() + ", " + right.toString() + " )";
     }
 
     public String getWord() {
