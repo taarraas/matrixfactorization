@@ -51,5 +51,16 @@ public class SpaceElement {
     public void setTag(String tag) {
         this.tag = tag;
     }
-    
+
+    public Object getLeft() {
+        return left;
+    }
+
+    public Object getRight() {
+        return right;
+    }
+
+    public Type getType() {
+        return type;
+    }
 }
