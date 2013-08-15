@@ -8,20 +8,19 @@ package knu.univ.lingvo.up;
  *
  * @author taras
  */
-public class SpaceElement {
+public class SpaceElement extends BaseSpaceElement{
     enum Type {
         A,
         B,
         AB,
         Unknown
     };
-    private Object left;
-    private Object right;
+    private BaseSpaceElement left;
+    private BaseSpaceElement right;
     private Type type;
-    private String tag;
-    private String word;
 
-    public SpaceElement(Object left, Object right, Type type, String tag, String word) {
+    public SpaceElement(BaseSpaceElement left, BaseSpaceElement right, Type type, String tag, String word) {
+        super(tag, word);
         if (left == null || right == null) {
             throw new RuntimeException();
         }
@@ -29,34 +28,19 @@ public class SpaceElement {
         this.right = right;
         this.type = type;
         assert(left.getClass().getName() == "String" || left.getClass().getName() == "SpaceElement");
-        assert(right.getClass().getName() == "String" || right.getClass().getName() == "SpaceElement");
-        
-        this.tag = tag.split("\\ ")[0];
-        this.word = word;
+        assert(right.getClass().getName() == "String" || right.getClass().getName() == "SpaceElement");        
         System.out.println(toString());
     }
     
     public String toString() {
-        return type.toString() + ":" + word + ":" + tag + "( " + left.toString() + ", " + right.toString() + " )";
+        return type.toString() + ":" + getWord() + ":" + getTag() + "( " + left.toString() + ", " + right.toString() + " )";
     }
 
-    public String getWord() {
-        return word;
-    }
-
-    public String getTag() {
-        return tag;
-    }
-
-    public void setTag(String tag) {
-        this.tag = tag;
-    }
-
-    public Object getLeft() {
+    public BaseSpaceElement getLeft() {
         return left;
     }
 
-    public Object getRight() {
+    public BaseSpaceElement getRight() {
         return right;
     }
 

@@ -77,24 +77,13 @@ public class SpaceForSentenceCreator {
         PREPOSITIONS.add("AFTER");
     }
 
-    private SpaceElement combinePair(Object s1, Object s2, Tree t1, Tree t2, String rootTag) {
+    private SpaceElement combinePair(BaseSpaceElement s1, BaseSpaceElement s2, Tree t1, Tree t2, String rootTag) {
         DepencyToSpaceType.Type type = getType(t1, t2);
 
-        String w1;
-        if (s1 instanceof SpaceElement) {
-            w1 = ((SpaceElement) s1).getWord();
-        } else {
-            w1 = (String) s1;
-        }
-        String w2;
+        String w1 = s1.getWord();
+        String w2 = s2.getWord();
         String tag1 = t1.nodeString().split("\\ ")[0];
-        String tag2 = t2.nodeString().split("\\ ")[0];
-
-        if (s2 instanceof SpaceElement) {
-            w2 = ((SpaceElement) s2).getWord();
-        } else {
-            w2 = (String) s2;
-        }
+        String tag2 = t2.nodeString().split("\\ ")[0];        
 
         String word;
         String tag;
@@ -132,7 +121,7 @@ public class SpaceForSentenceCreator {
         }
     }
 
-    private SpaceElement combineOneLevel(Object[] si, Tree[] ti, String rootTag) {
+    private SpaceElement combineOneLevel(BaseSpaceElement[] si, Tree[] ti, String rootTag) {
         if (si.length != ti.length) {
             throw new RuntimeException("Fail");
         }
@@ -141,7 +130,7 @@ public class SpaceForSentenceCreator {
         }
 
         ArrayList<ArrayList<Tree>> t = new ArrayList();
-        ArrayList s = new ArrayList();
+        ArrayList<BaseSpaceElement> s = new ArrayList<BaseSpaceElement>();
         for (int i = 0; i < ti.length; i++) {
             Tree tree = ti[i];
             ArrayList<Tree> treelist = new ArrayList<Tree>();
@@ -187,15 +176,9 @@ public class SpaceForSentenceCreator {
         while (s.size() > 1) {
             int i1 = s.size() - 2;
             int i2 = s.size() - 1;
-            String word;
-            String tag;
-            if (s.get(i2) instanceof SpaceElement) {
-                word = ((SpaceElement) s.get(i2)).getWord();
-                tag = rootTag;//((SpaceElement) s.get(i2)).getTag();
-            } else {
-                word = (String) s.get(i2);
-                tag = rootTag;//"UNK";
-            }
+            String word = s.get(i2).getWord();
+            String tag = rootTag;
+            tag = rootTag;
 
             s.set(i1,
                     new SpaceElement(s.get(i1), s.get(i2), SpaceElement.Type.AB, tag, word));
@@ -214,9 +197,9 @@ public class SpaceForSentenceCreator {
 
     ;
 
-    private Object buildRecursive(Tree p) {
+    private BaseSpaceElement buildRecursive(Tree p) {
         if (p.isLeaf()) {
-            return p.toString();
+            return new BaseSpaceElement(p.nodeString(), p.toString());
         }
 
         Tree[] children = p.children();
@@ -233,10 +216,12 @@ public class SpaceForSentenceCreator {
         }
 
         if (noPunctuation.size() == 1) {
-            return buildRecursive(noPunctuation.get(0));
+            BaseSpaceElement one = buildRecursive(noPunctuation.get(0));
+            one.setTag(p.nodeString());
+            return one;
         }
 
-        Object elems[] = new Object[noPunctuation.size()];
+        BaseSpaceElement elems[] = new BaseSpaceElement[noPunctuation.size()];
         for (int i = 0; i < noPunctuation.size(); i++) {
             Tree tree = noPunctuation.get(i);
             elems[i] = buildRecursive(tree);

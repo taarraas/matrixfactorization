@@ -19,21 +19,10 @@ public class TwoWordsExtractor {
 
         if (se.getType() == SpaceElement.Type.AB) {
             String[] thisLevel = new String[6];
-            if (se.getLeft() instanceof SpaceElement) {
-                thisLevel[0] = ((SpaceElement) se.getLeft()).getWord();
-                thisLevel[1] = ((SpaceElement) se.getLeft()).getTag();
-            } else {
-                thisLevel[0] = (String) se.getLeft();
-                thisLevel[1] = "unk";
-            }
-            if (se.getRight() instanceof SpaceElement) {
-                thisLevel[2] = ((SpaceElement) se.getRight()).getWord();
-                thisLevel[3] = ((SpaceElement) se.getRight()).getTag();
-            } else {
-                thisLevel[2] = (String) se.getRight();
-                thisLevel[3] = "unk";
-            }
-
+            thisLevel[0] = se.getLeft().getWord();
+            thisLevel[1] = se.getLeft().getTag();
+            thisLevel[2] = se.getRight().getWord();
+            thisLevel[3] = se.getRight().getTag();
             thisLevel[4] = se.getWord();
             thisLevel[5] = se.getTag();
 

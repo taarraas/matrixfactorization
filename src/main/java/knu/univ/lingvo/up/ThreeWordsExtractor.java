@@ -17,30 +17,12 @@ public class ThreeWordsExtractor {
         ArrayList<String[]> twoWordsList = new ArrayList();
         if (ser.getType() == SpaceElement.Type.B) {
             String[] thisLevel = new String[6];
-            if (se.getLeft() instanceof SpaceElement) {
-                thisLevel[0] = ((SpaceElement) se.getLeft()).getWord();
-                thisLevel[1] = ((SpaceElement) se.getLeft()).getTag();
-            } else {
-                thisLevel[0] = (String) se.getLeft();
-                thisLevel[1] = "unk";
-            }
-
-            if (ser.getLeft() instanceof SpaceElement) {
-                thisLevel[2] = ((SpaceElement) ser.getLeft()).getWord();
-                thisLevel[3] = ((SpaceElement) ser.getLeft()).getTag();
-            } else {
-                thisLevel[2] = (String) ser.getLeft();
-                thisLevel[3] = "unk";
-            }
-
-            if (ser.getRight() instanceof SpaceElement) {
-                thisLevel[4] = ((SpaceElement) ser.getRight()).getWord();
-                thisLevel[5] = ((SpaceElement) ser.getRight()).getTag();
-            } else {
-                thisLevel[4] = (String) ser.getRight();
-                thisLevel[5] = "unk";
-            }
-
+            thisLevel[0] = se.getLeft().getWord();
+            thisLevel[1] = se.getLeft().getTag();
+            thisLevel[2] = ser.getLeft().getWord();
+            thisLevel[3] = ser.getLeft().getTag();
+            thisLevel[4] = ser.getRight().getWord();
+            thisLevel[5] = ser.getRight().getTag();
             twoWordsList.add(thisLevel);
         }
         if (ser.getLeft() instanceof SpaceElement) {
