@@ -251,7 +251,11 @@ public class SpaceForSentenceCreator {
             return null;
         }
 
-        return (SpaceElement) buildRecursive(parse);
+        BaseSpaceElement space = buildRecursive(parse);
+        if (space instanceof SpaceElement)
+            return (SpaceElement) buildRecursive(parse);
+        else 
+            return null;
     }
 
     public static void main(String argv[]) {

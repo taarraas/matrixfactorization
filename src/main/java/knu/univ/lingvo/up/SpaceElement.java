@@ -29,7 +29,7 @@ public class SpaceElement extends BaseSpaceElement{
         this.type = type;
         assert(left.getClass().getName() == "String" || left.getClass().getName() == "SpaceElement");
         assert(right.getClass().getName() == "String" || right.getClass().getName() == "SpaceElement");        
-        System.out.println(toString());
+        //System.out.println(toString());
     }
     
     public String toString() {

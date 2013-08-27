@@ -97,6 +97,9 @@ public class DepencyToSpaceType {
     
     public Type getTypeFor(String stanfordType) {
         Type s = typeMap.get(stanfordType);
+        if (s == null) {
+            System.out.println("tmp");
+        }
         Type copied = new Type(s.getType(), s.isDirectOrder());
         if (stanfordType.equalsIgnoreCase("prt"))
             copied.setShouldMerge(true);
