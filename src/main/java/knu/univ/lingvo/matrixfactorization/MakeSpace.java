@@ -49,8 +49,8 @@ public class MakeSpace {
         else
             PATH = args[0];
         
-        OutputStream two = new FileOutputStream("two.txt");
-        OutputStream three = new FileOutputStream("three.txt");
+        OutputStream two = new FileOutputStream("two.txt" , true);
+        OutputStream three = new FileOutputStream("three.txt", true);
         
         MakeSpace mt = new MakeSpace(PATH, new Space2DBHandler(two, three));
     }

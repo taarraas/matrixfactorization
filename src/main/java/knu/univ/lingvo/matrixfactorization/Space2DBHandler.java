@@ -104,20 +104,22 @@ public class Space2DBHandler implements PageHandler {
         ArrayList<String[]> two = TwoWordsExtractor.getTwoWords(se);
         ArrayList<String[]> three = ThreeWordsExtractor.getThreeWords(se);
         for (String[] strings : two) {
+            twos.print("\"");
             for (String string : strings) {
                 twos.print(string);
-                twos.print(" ");
+                twos.print("\";\"");
             }
-            twos.print("\n");
+            twos.print("\"\n");
         }
         twos.flush();
         
         for (String[] strings : three) {
-            for (String string : strings) {
+            threes.print("\"");
+              for (String string : strings) {
                 threes.print(string);
-                threes.print(" ");
+                threes.print("\";\"");
             }
-            threes.print("\n");
+            threes.print("\"\n");
         }
         threes.flush();
     }
