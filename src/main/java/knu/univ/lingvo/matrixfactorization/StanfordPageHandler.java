@@ -159,7 +159,6 @@ public class StanfordPageHandler implements PageHandler {
         Collection<TypedDependency> tdl = gs.typedDependenciesCollapsed();
 
         TreeGraphNode tgn = gs.root();
-        Set<TreeGraphNode> tgns = gs.getDependents(tgn);
 
         ArrayList<Depency> deps = new ArrayList<Depency>();
         for (TypedDependency typedDependency : tdl) {
