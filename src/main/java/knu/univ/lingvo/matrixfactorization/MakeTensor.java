@@ -12,7 +12,6 @@ import java.io.InputStream;
 import java.util.Map;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import knu.univ.lingvo.analysis.Main;
 import knu.univ.lingvo.wikiner.NER;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.xml.sax.SAXException;

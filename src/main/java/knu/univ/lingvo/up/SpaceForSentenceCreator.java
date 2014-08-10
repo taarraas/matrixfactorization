@@ -5,6 +5,7 @@
 package knu.univ.lingvo.up;
 
 import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.ling.Word;
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.process.PTBTokenizer;
 import edu.stanford.nlp.trees.GrammaticalRelation;
@@ -21,7 +22,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import knu.univ.lingvo.analysis.Main;
 import org.apache.log4j.Logger;
 
 /**
@@ -39,18 +39,20 @@ public class SpaceForSentenceCreator {
 
     private DepencyToSpaceType.Type getType(Tree left, Tree right) {
         for (Tree lL : left.getLeaves()) {
-            CoreMap cmL = (CoreMap) lL.label();
-            Integer iL = cmL.get(CoreAnnotations.IndexAnnotation.class);
+            Word cmL = (Word) lL.label();
+            Integer iL = cmL.beginPosition();
             for (Tree rL : right.getLeaves()) {
-                CoreMap cmR = (CoreMap) rL.label();
-                Integer iR = cmR.get(CoreAnnotations.IndexAnnotation.class);
+                Word cmR = (Word) rL.label();
+                Integer iR = cmR.beginPosition();
 
                 Collection<TypedDependency> typedDeps = gs.typedDependenciesCollapsed();
 
                 for (TypedDependency typedDependency : typedDeps) {
-                    int i1 = typedDependency.gov().label().get(CoreAnnotations.IndexAnnotation.class);
-                    int i2 = typedDependency.dep().label().get(CoreAnnotations.IndexAnnotation.class);
-
+                    int i1 = typedDependency.gov().label().beginPosition();
+                    int i2 = typedDependency.dep().label().beginPosition();
+                    int i1e = typedDependency.gov().label().beginPosition();
+                    int i2e = typedDependency.dep().label().beginPosition();
+                    
                     if (i1 == iL && i2 == iR) {
                         DepencyToSpaceType.Type type = dtst.getTypeFor(typedDependency.reln().getShortName());
                         type.setFirstMain(true);
