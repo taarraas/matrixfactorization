@@ -40,7 +40,7 @@ public class Constants {
   public static final boolean REMOVE_SINGLETONS = true;
 
   /** if true, read *auto_conll, if false, read *gold_conll */
-  public static final boolean USE_CONLL_AUTO = true;
+  public static final boolean USE_CONLL_AUTO = false;
 
   /** if true, print in conll output format */
   public static final boolean PRINT_CONLL_OUTPUT = false;
@@ -56,7 +56,7 @@ public class Constants {
 
   /** Use animacy list (Bergsma and Lin, 2006; Ji and Lin, 2009) */
   public static final boolean USE_ANIMACY_LIST = true;
-
+  
   /** Share attributes between coreferent mentions **/
   public static final boolean SHARE_ATTRIBUTES = true;
 

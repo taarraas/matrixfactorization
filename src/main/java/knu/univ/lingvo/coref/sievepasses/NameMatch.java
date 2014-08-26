@@ -1,6 +1,6 @@
 package knu.univ.lingvo.coref.sievepasses;
 
-import edu.stanford.nlp.dcoref.*;
+import knu.univ.lingvo.coref.*;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.ReflectionLoading;
 import edu.stanford.nlp.util.logging.Redwood;

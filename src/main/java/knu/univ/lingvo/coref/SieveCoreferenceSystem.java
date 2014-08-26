@@ -26,6 +26,8 @@
 
 package knu.univ.lingvo.coref;
 
+import edu.stanford.nlp.classify.LinearClassifier;
+import edu.stanford.nlp.classify.LinearClassifierFactory;
 import knu.univ.lingvo.coref.ACEMentionExtractor;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -57,6 +59,7 @@ import java.util.regex.Pattern;
 
 import edu.stanford.nlp.pipeline.DefaultPaths;
 import edu.stanford.nlp.classify.LogisticClassifier;
+import edu.stanford.nlp.classify.LogisticClassifierFactory;
 import knu.univ.lingvo.coref.CorefChain.CorefMention;
 import knu.univ.lingvo.coref.Dictionaries.MentionType;
 import knu.univ.lingvo.coref.ScorerBCubed.BCubedType;
@@ -78,6 +81,8 @@ import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.SystemUtils;
 import edu.stanford.nlp.util.logging.NewlineLogFormatter;
+import java.io.ObjectOutputStream;
+import knu.univ.lingvo.coref.sievepasses.ClassifierSieve;
 
 
 /**
@@ -190,7 +195,15 @@ public class SieveCoreferenceSystem {
     sieveClassNames = sievePasses.trim().split(",\\s*");
     sieves = new DeterministicCorefSieve[sieveClassNames.length];
     for(int i = 0; i < sieveClassNames.length; i ++){
-      sieves[i] = (DeterministicCorefSieve) Class.forName("knu.univ.lingvo.coref.sievepasses."+sieveClassNames[i]).getConstructor().newInstance();
+      if (sieveClassNames[i].startsWith("Classifier"))
+      {
+          String[] parts = sieveClassNames[i].split("\\_");
+          sieves[i] = new ClassifierSieve(Double.valueOf(parts[1]), Double.valueOf(parts[2]));          
+      }
+      else
+      {
+            sieves[i] = (DeterministicCorefSieve) Class.forName("knu.univ.lingvo.coref.sievepasses."+sieveClassNames[i]).getConstructor().newInstance();
+      }
       sieves[i].init(props);
     }
 
@@ -238,7 +251,7 @@ public class SieveCoreferenceSystem {
         optimizeMetricTypeOk = true;
         break;
       }
-    }
+    }       
     if (!optimizeMetricTypeOk) {
       throw new IllegalArgumentException("Invalid metric type for " +
               Constants.OPTIMIZE_SIEVES_SCORE_PROP + " property: " + optimizeScoreType);
@@ -424,6 +437,18 @@ public class SieveCoreferenceSystem {
 
     try {
       runAndScoreCoref(corefSystem, mentionExtractor, props, timeStamp);
+        LogisticClassifierFactory<Boolean,String> factory = new LogisticClassifierFactory<Boolean,String>();
+    // Build a classifier
+    LogisticClassifier<Boolean, String> classifier = factory.trainClassifier(((ClassifierSieve)corefSystem.sieves[0]).dataset, 0, 1e-15);
+    // Check out the learned weights
+    
+     FileOutputStream fileOut =
+         new FileOutputStream("classifier.ser");
+         ObjectOutputStream out = new ObjectOutputStream(fileOut);
+         out.writeObject(classifier);
+         out.close();
+         fileOut.close();
+         System.out.printf("Serialized data is saved in /tmp/employee.ser");
     } catch (Exception ex) {
       logger.log(Level.SEVERE, "ERROR in running coreference", ex);
     }

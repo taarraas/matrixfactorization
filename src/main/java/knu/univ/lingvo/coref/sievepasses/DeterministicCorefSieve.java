@@ -26,6 +26,10 @@
 
 package knu.univ.lingvo.coref.sievepasses;
 
+import edu.stanford.nlp.classify.Dataset;
+import edu.stanford.nlp.classify.GeneralDataset;
+import edu.stanford.nlp.classify.LogisticClassifier;
+import edu.stanford.nlp.ling.BasicDatum;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,7 +65,7 @@ import edu.stanford.nlp.trees.Tree;
 public abstract class DeterministicCorefSieve  {
 
   public final SieveOptions flags;
-
+  
   /** Initialize flagSet */
   public DeterministicCorefSieve() {
     flags = new SieveOptions();
@@ -407,7 +411,7 @@ public abstract class DeterministicCorefSieve  {
       if(Rules.entityCorefDictionary(mention, ant, dict, 3, 2)) return true;
       if(Rules.entityCorefDictionary(mention, ant, dict, 4, 2)) return true;
     }
-
+    
     if(flags.DO_PRONOUN){
       Mention m;
       if (mention.predicateNominatives!=null && mention.predicateNominatives.contains(mention2)) {
