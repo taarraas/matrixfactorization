@@ -164,6 +164,7 @@ public class MentionExtractor {
     //
     // traverse all sentences and process each individual one
     //
+    int mentionNumber =0;
     for (int sent = 0, sz = words.size(); sent < sz; sent ++) {
       List<CoreLabel> sentence = words.get(sent);
       Tree tree = trees.get(sent);
@@ -178,6 +179,8 @@ public class MentionExtractor {
       // startIndex and endIndex MUST be set before!
       //
       for (Mention mention: mentions) {
+          mention.sentenceNumber = sent;
+          mention.mentionNumber = mentionNumber++;
         mention.contextParseTree = tree;
         mention.sentenceWords = sentence;
         mention.originalSpan = new ArrayList<CoreLabel>(mention.sentenceWords.subList(mention.startIndex, mention.endIndex));

@@ -92,6 +92,9 @@ public class Mention implements CoreAnnotation<Mention>, Serializable {
     this.originalSpan = mentionSpan;
     this.mentionSubTree = mentionTree;
   }
+  
+  public int sentenceNumber;
+  public int mentionNumber;
 
   public MentionType mentionType;
   public Number number;

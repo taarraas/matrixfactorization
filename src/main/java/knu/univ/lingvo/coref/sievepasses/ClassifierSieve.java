@@ -71,6 +71,10 @@ public class ClassifierSieve extends DeterministicCorefSieve {
             ArrayList<String> feat2 = ant.getSingletonFeatures(dict);
             ArrayList<String> merge = new ArrayList(feat1);
             merge.addAll(feat2);
+            merge.add(""+mentionCluster.getCorefMentions().size());
+            merge.add(""+potentialAntecedent.getCorefMentions().size());
+            merge.add(""+(mention.sentenceNumber - ant.sentenceNumber));
+            merge.add(""+(mention.mentionNumber - ant.mentionNumber));
 
             Map<Integer, Mention> goldMentions = document.allGoldMentions;
             Map<Integer, Mention> predictedMentions = document.allPredictedMentions;
