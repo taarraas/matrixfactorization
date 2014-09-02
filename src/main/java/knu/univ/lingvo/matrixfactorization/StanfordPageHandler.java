@@ -182,9 +182,10 @@ public class StanfordPageHandler implements PageHandler {
             try {
             if (fws.get(cur.type) == null)
             {
-                fws.put(cur.type, new FileWriter(cur.type + ".dic"));
+                fws.put(cur.type, new FileWriter(cur.type + ".dic", true));
             }
             fws.get(cur.type).write(cur.w1+";&;"+cur.w2+"\n");
+		fws.get(cur.type).flush();
             } catch(Exception err)
             {
                 err.printStackTrace();

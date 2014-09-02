@@ -41,7 +41,7 @@ public class MakeTensor {
      */
     public static void main(String[] args) throws Exception {
         NER v = new NER();
-        DB.getInstance().fillVocabulary(v);
+ //       DB.getInstance().fillVocabulary(v);
         String PATH;
         if (args.length == 0)
             PATH = "/home/taras/Downloads/enwiki-latest-pages-articles.xml.bz2";
