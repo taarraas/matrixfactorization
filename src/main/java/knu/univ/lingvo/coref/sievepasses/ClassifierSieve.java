@@ -11,12 +11,16 @@ import edu.stanford.nlp.ling.BasicDatum;
 import edu.stanford.nlp.ling.CoreAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.IndexedWord;
+import edu.stanford.nlp.trees.EnglishGrammaticalRelations;
+import edu.stanford.nlp.trees.GrammaticalRelation;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -96,6 +100,92 @@ public class ClassifierSieve extends DeterministicCorefSieve {
         return str;
     }
 
+    public static ArrayList<String> samePhrase(CorefCluster mentionCluster,
+            CorefCluster potentialAntecedent) {
+        ArrayList<String> str = new ArrayList<String>();
+        int totalPossible = 0;
+        int totalMatched = 0;
+        int maxMatch = 0;
+        int maxPossibleForMax = 0;
+        for (Mention mention : mentionCluster.getCorefMentions()) {
+            Set<String> w1 = new TreeSet<String>();
+            for (CoreLabel coreLabel : mention.originalSpan) {
+                String pos = coreLabel.getString(CoreAnnotations.PartOfSpeechAnnotation.class);
+                    if (pos.equals("DT"))
+                        continue;                
+                    String text = coreLabel.getString(CoreAnnotations.LemmaAnnotation.class);
+                    w1.add(text);
+            }
+            for (Mention mention1 : potentialAntecedent.getCorefMentions()) {
+                if (mention1.sentNum == mention.sentNum) {
+                    continue;
+                }
+
+                Set<String> w2 = new TreeSet<String>();
+                for (CoreLabel coreLabel : mention1.originalSpan) {
+                    String pos = coreLabel.getString(CoreAnnotations.PartOfSpeechAnnotation.class);
+                    String text = coreLabel.getString(CoreAnnotations.LemmaAnnotation.class);
+                    if (pos.equals("DT"))
+                        continue;
+                    w2.add(text);
+                }
+
+                int currMathced = 0;
+                for (String string : w2) {
+                    totalPossible++;
+                    if (w1.contains(string)) {
+                        totalMatched++;
+                        currMathced++;
+                    }
+                }
+                if (currMathced > maxMatch)
+                {
+                    maxMatch = currMathced;
+                    maxPossibleForMax = Math.max(w1.size(), w2.size());
+                }
+            }
+        }
+        str.add("" + totalPossible);
+        str.add("" + totalMatched);
+        str.add("" + maxMatch);
+        str.add("" + maxPossibleForMax);
+        return str;
+    }
+
+    public static ArrayList<String> sameContexts2(CorefCluster mentionCluster,
+            CorefCluster potentialAntecedent) {
+        ArrayList<String> str = new ArrayList<String>();
+        int totalPossible = 0;
+        int totalMatched = 0;
+        for (Mention mention : mentionCluster.getCorefMentions()) {
+            if (mention.headIndexedWord == null) {
+                continue;
+            }
+            Set<GrammaticalRelation> relns1 = mention.dependency.relns(mention.headIndexedWord);
+            List<IndexedWord> ch1 = mention.dependency.getChildrenWithReln(mention.headIndexedWord, EnglishGrammaticalRelations.NOMINAL_SUBJECT);
+            if (ch1.isEmpty()) {
+                continue;
+            }
+            for (Mention mention1 : potentialAntecedent.getCorefMentions()) {
+
+                if (mention1.headIndexedWord == null) {
+                    continue;
+                }
+                List<IndexedWord> ch2 = mention1.dependency.getChildrenWithReln(mention1.headIndexedWord, EnglishGrammaticalRelations.NOMINAL_SUBJECT);
+                if (ch2.isEmpty()) {
+                    continue;
+                }
+                if (ch1 == ch2) {
+                    continue;
+                }
+
+            }
+        }
+        str.add("" + totalPossible);
+        str.add("" + totalMatched);
+        return str;
+    }
+
     /**
      * Checks if two clusters are coreferent according to our sieve pass
      * constraints
@@ -123,6 +213,8 @@ public class ClassifierSieve extends DeterministicCorefSieve {
             merge.add("" + (mention.sentenceNumber - ant.sentenceNumber));
             merge.add("" + (mention.mentionNumber - ant.mentionNumber));
             merge.addAll(sameContexts(mentionCluster, potentialAntecedent));
+            merge.addAll(samePhrase(mentionCluster, potentialAntecedent));
+            //merge.addAll(sameContexts2(mentionCluster, potentialAntecedent));
 
             Map<Integer, Mention> goldMentions = document.allGoldMentions;
             Map<Integer, Mention> predictedMentions = document.allPredictedMentions;

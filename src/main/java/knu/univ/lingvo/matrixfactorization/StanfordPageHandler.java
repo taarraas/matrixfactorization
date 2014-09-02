@@ -20,10 +20,12 @@ import info.bliki.wiki.filter.PlainTextConverter;
 import info.bliki.wiki.model.WikiModel;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.sql.SQLException;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -160,6 +162,7 @@ public class StanfordPageHandler implements PageHandler {
         TreeGraphNode tgn = gs.root();
 
         ArrayList<Depency> deps = new ArrayList<Depency>();
+        Map<String, FileWriter> fws = new TreeMap<String, FileWriter>();
         for (TypedDependency typedDependency : tdl) {
             Depency cur = new Depency();
             String str = typedDependency.toString();
@@ -176,8 +179,19 @@ public class StanfordPageHandler implements PageHandler {
             cur.n2 = str.substring(e + 1, f);
             //System.out.println(str);
             //System.out.println(cur.toString());
-            deps.add(cur);
+            try {
+            if (fws.get(cur.type) == null)
+            {
+                fws.put(cur.type, new FileWriter(cur.type + ".dic"));
+            }
+            fws.get(cur.type).write(cur.w1+";&;"+cur.w2+"\n");
+            } catch(Exception err)
+            {
+                err.printStackTrace();
+            }
+            //deps.add(cur);
         }
+        /*
         String wordRoot = null;
         String noRootS = null;
         for (Depency depency : deps) {
@@ -316,7 +330,7 @@ public class StanfordPageHandler implements PageHandler {
 
         //System.out.println("words: "+words); 
         //System.out.println("POStags: "+tags); 
-        //System.out.println("all deps : " + tdl);
+        //System.out.println("all deps : " + tdl);*/
     }
     
     private static int overall = 0;

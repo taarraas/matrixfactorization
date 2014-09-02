@@ -95,6 +95,7 @@ public class Mention implements CoreAnnotation<Mention>, Serializable {
   
   public int sentenceNumber;
   public int mentionNumber;
+  public String sourceSentence;
 
   public MentionType mentionType;
   public Number number;
