@@ -23,6 +23,7 @@ import edu.stanford.nlp.trees.TreebankLanguagePack;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.trees.WordStemmer;
 import edu.stanford.nlp.util.CoreMap;
+import edu.stanford.nlp.util.StringUtils;
 import info.bliki.wiki.filter.PlainTextConverter;
 import info.bliki.wiki.model.WikiModel;
 import java.io.DataInputStream;
@@ -362,8 +363,9 @@ public class StanfordPageHandler implements PageHandler {
         log.info(sb.toString() + " " + weight);
     }
 
+    String argsSNLP[] = {"-props", "data/coref.properties"};
     
-    StanfordCoreNLP stanfordProcessor = new StanfordCoreNLP("data/coref.properties", false);
+    StanfordCoreNLP stanfordProcessor = new StanfordCoreNLP(StringUtils.argsToProperties(argsSNLP), false);
     
     Map<String, FileWriter> fws = new TreeMap<String, FileWriter>();
     
