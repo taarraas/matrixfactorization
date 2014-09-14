@@ -4,10 +4,16 @@
  */
 package knu.univ.lingvo.matrixfactorization;
 
+import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.TaggedWord;
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
+import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.process.DocumentPreprocessor;
 import edu.stanford.nlp.process.PTBTokenizer;
+import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
+import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.GrammaticalStructureFactory;
 import edu.stanford.nlp.trees.PennTreebankLanguagePack;
@@ -16,6 +22,7 @@ import edu.stanford.nlp.trees.TreeGraphNode;
 import edu.stanford.nlp.trees.TreebankLanguagePack;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.trees.WordStemmer;
+import edu.stanford.nlp.util.CoreMap;
 import info.bliki.wiki.filter.PlainTextConverter;
 import info.bliki.wiki.model.WikiModel;
 import java.io.DataInputStream;
@@ -69,6 +76,8 @@ public class StanfordPageHandler implements PageHandler {
     LexicalizedParser lp = LexicalizedParser.getParserFromSerializedFile(parserFileOrUrl);
 
     public StanfordPageHandler(NER ner) {
+        
+
         initSentenceDetect();
         this.ner = ner;
     }
@@ -156,7 +165,7 @@ public class StanfordPageHandler implements PageHandler {
         } catch (Throwable e) {
             e.printStackTrace();
             return;
-        }
+        }        
         Collection<TypedDependency> tdl = gs.typedDependenciesCollapsed();
 
         TreeGraphNode tgn = gs.root();
@@ -353,6 +362,11 @@ public class StanfordPageHandler implements PageHandler {
         log.info(sb.toString() + " " + weight);
     }
 
+    
+    StanfordCoreNLP stanfordProcessor = new StanfordCoreNLP("data/coref.properties", false);
+    
+    Map<String, FileWriter> fws = new TreeMap<String, FileWriter>();
+    
     public void handle(String rawPage, String title) {
         String woTranslate = rawPage.replaceAll("(\\[\\[[^\\]]+\\]\\]\n)*\\[\\[[^\\]]+\\]\\]$", "");
         String plainStr = wikiModel.render(new PlainTextConverter(), woTranslate);
@@ -364,7 +378,34 @@ public class StanfordPageHandler implements PageHandler {
             if (text.isEmpty())
                 continue;
             
-            String sentences[] = sentenceDetector.sentDetect(text);
+            Annotation anno = new Annotation(text);
+            stanfordProcessor.annotate(anno);
+            List<CoreMap> sentences = anno.get(CoreAnnotations.SentencesAnnotation.class);
+
+            for (CoreMap s : sentences){
+                SemanticGraph ss = s.get(SemanticGraphCoreAnnotations.CollapsedDependenciesAnnotation.class);
+                for (SemanticGraphEdge semanticGraphEdge : ss.edgeListSorted()) {
+                    String type = semanticGraphEdge.getRelation().getShortName();
+                    String w1 = semanticGraphEdge.getGovernor().getString(CoreAnnotations.TextAnnotation.class);
+                    String w2 = semanticGraphEdge.getDependent().getString(CoreAnnotations.TextAnnotation.class);
+                    String w1Lemma = semanticGraphEdge.getGovernor().getString(CoreAnnotations.LemmaAnnotation.class);
+                    String w2Lemma = semanticGraphEdge.getDependent().getString(CoreAnnotations.LemmaAnnotation.class);
+                    try {
+                    if (fws.get(type) == null)
+                    {
+                        fws.put(type, new FileWriter(type + ".dic", true));
+                    }
+                        fws.get(type).write(w1+";&;"+w2+";&;"+w1Lemma+";&;"+w2Lemma+"\n");
+                        fws.get(type).flush();
+                    } catch(Exception err)
+                    {
+                        err.printStackTrace();
+                    }
+                }
+            }
+      
+            
+            /*String sentences[] = sentenceDetector.sentDetect(text);
             for (String sentence : sentences) {
                 overall++;
                 try {
@@ -375,7 +416,7 @@ public class StanfordPageHandler implements PageHandler {
                 }
                 isFirstSentence = false;
             }
-            isFirstParagraph = false;            
+            isFirstParagraph = false;    */        
         }
         log.info("" + good + "/" + overall + " = " + ((float) good / overall));
     }

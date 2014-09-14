@@ -12,13 +12,17 @@ import edu.stanford.nlp.ling.CoreAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.IndexedWord;
+import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.trees.EnglishGrammaticalRelations;
 import edu.stanford.nlp.trees.GrammaticalRelation;
+import edu.stanford.nlp.trees.TypedDependency;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +33,8 @@ import knu.univ.lingvo.coref.Dictionaries;
 import knu.univ.lingvo.coref.Document;
 import knu.univ.lingvo.coref.Mention;
 import knu.univ.lingvo.coref.Semantics;
+import knu.univ.lingvo.matrixfactorization.StanfordPageHandler;
+import knu.univ.lingvo.up.TypedDepencyVocabulary;
 
 /**
  *
@@ -37,12 +43,14 @@ import knu.univ.lingvo.coref.Semantics;
 public class ClassifierSieve extends DeterministicCorefSieve {
 
     LogisticClassifier<Boolean, String> classifier;
-    double matchThreshol;
-    double inconsistencyThreshold;
+    public double matchThreshol;
+    public double inconsistencyThreshold;
+    TypedDepencyVocabulary typedDepencyVocabulary;
 
-    public ClassifierSieve(double matchThreshol, double inconsistencyThreshold) {
+    public ClassifierSieve(double matchThreshol, double inconsistencyThreshold, TypedDepencyVocabulary typed) {
         this.matchThreshol = matchThreshol;
         this.inconsistencyThreshold = inconsistencyThreshold;
+        this.typedDepencyVocabulary = typed;
         try {
             FileInputStream fileIn =
                     new FileInputStream("classifier.ser");
@@ -111,10 +119,11 @@ public class ClassifierSieve extends DeterministicCorefSieve {
             Set<String> w1 = new TreeSet<String>();
             for (CoreLabel coreLabel : mention.originalSpan) {
                 String pos = coreLabel.getString(CoreAnnotations.PartOfSpeechAnnotation.class);
-                    if (pos.equals("DT"))
-                        continue;                
-                    String text = coreLabel.getString(CoreAnnotations.LemmaAnnotation.class);
-                    w1.add(text);
+                if (pos.equals("DT")) {
+                    continue;
+                }
+                String text = coreLabel.getString(CoreAnnotations.LemmaAnnotation.class);
+                w1.add(text);
             }
             for (Mention mention1 : potentialAntecedent.getCorefMentions()) {
                 if (mention1.sentNum == mention.sentNum) {
@@ -125,8 +134,9 @@ public class ClassifierSieve extends DeterministicCorefSieve {
                 for (CoreLabel coreLabel : mention1.originalSpan) {
                     String pos = coreLabel.getString(CoreAnnotations.PartOfSpeechAnnotation.class);
                     String text = coreLabel.getString(CoreAnnotations.LemmaAnnotation.class);
-                    if (pos.equals("DT"))
+                    if (pos.equals("DT")) {
                         continue;
+                    }
                     w2.add(text);
                 }
 
@@ -138,8 +148,7 @@ public class ClassifierSieve extends DeterministicCorefSieve {
                         currMathced++;
                     }
                 }
-                if (currMathced > maxMatch)
-                {
+                if (currMathced > maxMatch) {
                     maxMatch = currMathced;
                     maxPossibleForMax = Math.max(w1.size(), w2.size());
                 }
@@ -186,6 +195,56 @@ public class ClassifierSieve extends DeterministicCorefSieve {
         return str;
     }
 
+    public ArrayList<String> sameUsage(CorefCluster mentionCluster,
+            CorefCluster potentialAntecedent) {
+        ArrayList<String> res = new ArrayList<String>();
+        int totalPossible = 0;
+        int totalMatched = 0;
+        for (Mention mention : mentionCluster.getCorefMentions()) {
+            if (mention.headIndexedWord == null) {
+                continue;
+            }
+
+            for (SemanticGraphEdge semanticGraphEdge : mention.dependency.outgoingEdgeList(mention.headIndexedWord)) {
+                String type = semanticGraphEdge.getRelation().getShortName();
+                System.out.println(type);
+                String w1 = semanticGraphEdge.getGovernor().getString(CoreAnnotations.TextAnnotation.class);
+                String w2 = semanticGraphEdge.getDependent().getString(CoreAnnotations.TextAnnotation.class);
+                for (Mention mention1 : potentialAntecedent.getCorefMentions()) {
+                    String w2Ant = mention1.headIndexedWord.getString(CoreAnnotations.TextAnnotation.class);
+                    if (typedDepencyVocabulary.pairsByType.containsKey(type)
+                            && typedDepencyVocabulary.pairsByType.get(type).contains(new AbstractMap.SimpleEntry<String, String>(w1, w2Ant))) {
+                        //System.out.println(w1 + " " + w2Ant);
+                        totalMatched++;
+                    }
+
+                }
+
+            }
+            
+            for (SemanticGraphEdge semanticGraphEdge : mention.dependency.incomingEdgeList(mention.headIndexedWord)) {
+                String type = semanticGraphEdge.getRelation().getShortName();
+                System.out.println(type);
+                String w1 = semanticGraphEdge.getGovernor().getString(CoreAnnotations.TextAnnotation.class);
+                String w2 = semanticGraphEdge.getDependent().getString(CoreAnnotations.TextAnnotation.class);
+                for (Mention mention1 : potentialAntecedent.getCorefMentions()) {
+                    String w2Ant = mention1.headIndexedWord.getString(CoreAnnotations.TextAnnotation.class);
+                    if (typedDepencyVocabulary.pairsByType.containsKey(type)
+                            && typedDepencyVocabulary.pairsByType.get(type).contains(new AbstractMap.SimpleEntry<String, String>(w1, w2Ant))) {
+                        //System.out.println(type + ": "  + w1 + "  " + w2 + " -> " + w2Ant);
+                        totalMatched++;
+                    }
+
+                }
+
+            }
+
+        }
+        res.add("" + totalPossible);
+        res.add("" + totalMatched);
+        return res;
+    }
+
     /**
      * Checks if two clusters are coreferent according to our sieve pass
      * constraints
@@ -214,6 +273,7 @@ public class ClassifierSieve extends DeterministicCorefSieve {
             merge.add("" + (mention.mentionNumber - ant.mentionNumber));
             merge.addAll(sameContexts(mentionCluster, potentialAntecedent));
             merge.addAll(samePhrase(mentionCluster, potentialAntecedent));
+            sameUsage(mentionCluster, potentialAntecedent);
             //merge.addAll(sameContexts2(mentionCluster, potentialAntecedent));
 
             Map<Integer, Mention> goldMentions = document.allGoldMentions;
