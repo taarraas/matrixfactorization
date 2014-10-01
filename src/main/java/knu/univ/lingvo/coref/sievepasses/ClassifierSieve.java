@@ -43,6 +43,7 @@ import knu.univ.lingvo.up.TypedDepencyVocabulary;
 public class ClassifierSieve extends DeterministicCorefSieve {
 
     LogisticClassifier<Boolean, String> classifier;
+    LogisticClassifier<Boolean, String> classifierLocal;
     public double matchThreshol;
     public double inconsistencyThreshold;
     TypedDepencyVocabulary typedDepencyVocabulary;
@@ -53,9 +54,16 @@ public class ClassifierSieve extends DeterministicCorefSieve {
         this.typedDepencyVocabulary = typed;
         try {
             FileInputStream fileIn =
-                    new FileInputStream("classifier.ser");
+                    new FileInputStream("classifier.ser.total");
             ObjectInputStream out = new ObjectInputStream(fileIn);
             classifier = (LogisticClassifier<Boolean, String>) out.readObject();
+            out.close();
+            fileIn.close();
+            
+            fileIn =
+                    new FileInputStream("classifier.ser.local");
+            out = new ObjectInputStream(fileIn);
+            classifierLocal = (LogisticClassifier<Boolean, String>) out.readObject();
             out.close();
             fileIn.close();
             System.out.printf("Serialized data is loaded from /tmp/employee.ser");
@@ -196,26 +204,56 @@ public class ClassifierSieve extends DeterministicCorefSieve {
     }
 
     public ArrayList<String> sameUsage(CorefCluster mentionCluster,
-            CorefCluster potentialAntecedent) {
-        ArrayList<String> res = new ArrayList<String>();
-        int totalPossible = 0;
-        int totalMatched = 0;
+            CorefCluster potentialAntecedent, ArrayList<String> otherParams, boolean isTrue) {
+        double sum = 0;
+            double max = Double.NEGATIVE_INFINITY;
+            double min = Double.POSITIVE_INFINITY;
+            int cnt=0;
+            
         for (Mention mention : mentionCluster.getCorefMentions()) {
             if (mention.headIndexedWord == null) {
                 continue;
             }
 
+            String antPos = null;
+            String type = null;
+            
+            boolean train=false;
+            
+            
             for (SemanticGraphEdge semanticGraphEdge : mention.dependency.outgoingEdgeList(mention.headIndexedWord)) {
-                String type = semanticGraphEdge.getRelation().getShortName();
-                System.out.println(type);
+                type = semanticGraphEdge.getRelation().getShortName();
                 String w1 = semanticGraphEdge.getGovernor().getString(CoreAnnotations.TextAnnotation.class);
                 String w2 = semanticGraphEdge.getDependent().getString(CoreAnnotations.TextAnnotation.class);
                 for (Mention mention1 : potentialAntecedent.getCorefMentions()) {
-                    String w2Ant = mention1.headIndexedWord.getString(CoreAnnotations.TextAnnotation.class);
+                    if (mention1.headIndexedWord ==null)
+                        continue;
+                    
+                    String w1Ant = mention1.headIndexedWord.getString(CoreAnnotations.TextAnnotation.class);                    
+                    antPos = mention1.headIndexedWord.getString(CoreAnnotations.PartOfSpeechAnnotation.class);
                     if (typedDepencyVocabulary.pairsByType.containsKey(type)
-                            && typedDepencyVocabulary.pairsByType.get(type).contains(new AbstractMap.SimpleEntry<String, String>(w1, w2Ant))) {
-                        //System.out.println(w1 + " " + w2Ant);
-                        totalMatched++;
+                            && typedDepencyVocabulary.pairsByType.get(type).contains(new AbstractMap.SimpleEntry<String, String>(w1Ant, w2))) {
+                        //System.out.println(type + ": "  + w1 + " -> " + w1Ant + " " + w2);
+                        ArrayList<String> merge = new ArrayList<String>();
+                        merge.addAll(otherParams);
+                        merge.add(antPos);
+                        merge.add(type);
+                        
+                        if (train)
+                        {
+                            BasicDatum<Boolean, String> datum = new BasicDatum<Boolean, String>(merge, isTrue);
+                            if (dataset.size() == 0 
+                                || dataset.getDatum(dataset.size() - 1).label() 
+                                || datum.label()) {
+                                dataset.add(datum);
+                            }
+                        }
+                        
+                        double probability = classifierLocal.probabilityOf(merge, true);
+                        sum+=probability;
+                        max = Math.max(probability, max);
+                        min = Math.min(probability, min);
+                        cnt++;
                     }
 
                 }
@@ -223,16 +261,37 @@ public class ClassifierSieve extends DeterministicCorefSieve {
             }
             
             for (SemanticGraphEdge semanticGraphEdge : mention.dependency.incomingEdgeList(mention.headIndexedWord)) {
-                String type = semanticGraphEdge.getRelation().getShortName();
-                System.out.println(type);
+                type = semanticGraphEdge.getRelation().getShortName();
                 String w1 = semanticGraphEdge.getGovernor().getString(CoreAnnotations.TextAnnotation.class);
                 String w2 = semanticGraphEdge.getDependent().getString(CoreAnnotations.TextAnnotation.class);
                 for (Mention mention1 : potentialAntecedent.getCorefMentions()) {
+                    if (mention1.headIndexedWord ==null)
+                        continue;
+                    
                     String w2Ant = mention1.headIndexedWord.getString(CoreAnnotations.TextAnnotation.class);
+                    antPos = mention1.headIndexedWord.getString(CoreAnnotations.PartOfSpeechAnnotation.class);
                     if (typedDepencyVocabulary.pairsByType.containsKey(type)
                             && typedDepencyVocabulary.pairsByType.get(type).contains(new AbstractMap.SimpleEntry<String, String>(w1, w2Ant))) {
                         //System.out.println(type + ": "  + w1 + "  " + w2 + " -> " + w2Ant);
-                        totalMatched++;
+                        ArrayList<String> merge = new ArrayList<String>();
+                        merge.addAll(otherParams);
+                        merge.add(antPos);
+                        merge.add(type);
+                        
+                        if (train)
+                        {
+                            BasicDatum<Boolean, String> datum = new BasicDatum<Boolean, String>(merge, isTrue);
+                            if (dataset.size() == 0 
+                                    || dataset.getDatum(dataset.size() - 1).label() 
+                                    || datum.label()) {
+                                dataset.add(datum);
+                            }
+                        }
+                        double probability = classifierLocal.probabilityOf(merge, true);
+                        sum+=probability;
+                        max = Math.max(probability, max);
+                        min = Math.min(probability, min);
+                        cnt++;
                     }
 
                 }
@@ -240,8 +299,18 @@ public class ClassifierSieve extends DeterministicCorefSieve {
             }
 
         }
-        res.add("" + totalPossible);
-        res.add("" + totalMatched);
+        
+        ArrayList<String> res = new ArrayList<String>();
+        int avgI = cnt ==0 ? -1 : (int)(sum / cnt * 100);
+        int maxI = cnt ==0 ? -1 : (int)(max * 100);
+        int minI = cnt ==0 ? -1 : (int)(min * 100);
+        int sumI = cnt ==0 ? -1 : (int)(sum * 100);
+        
+        res.add("" + avgI);
+        res.add("" + maxI);
+        res.add("" + minI);
+        res.add("" + sumI);
+
         return res;
     }
 
@@ -263,6 +332,14 @@ public class ClassifierSieve extends DeterministicCorefSieve {
         Mention mention = mentionCluster.getRepresentativeMention();
 
         if (matchThreshol > inconsistencyThreshold) {
+            Map<Integer, Mention> goldMentions = document.allGoldMentions;
+            Map<Integer, Mention> predictedMentions = document.allPredictedMentions;
+
+            boolean qualOld = goldMentions.containsKey(mention.mentionID) && goldMentions.containsKey(ant.mentionID)
+                    && goldMentions.get(mention.mentionID).goldCorefClusterID == goldMentions.get(ant.mentionID).goldCorefClusterID;
+
+            
+            
             ArrayList<String> feat1 = mention.getSingletonFeatures(dict);
             ArrayList<String> feat2 = ant.getSingletonFeatures(dict);
             ArrayList<String> merge = new ArrayList(feat1);
@@ -270,24 +347,23 @@ public class ClassifierSieve extends DeterministicCorefSieve {
             merge.add("" + mentionCluster.getCorefMentions().size());
             merge.add("" + potentialAntecedent.getCorefMentions().size());
             merge.add("" + (mention.sentenceNumber - ant.sentenceNumber));
-            merge.add("" + (mention.mentionNumber - ant.mentionNumber));
+            merge.add("" + (mention.mentionNumber - ant.mentionNumber));            
+            merge.addAll(sameUsage(mentionCluster, potentialAntecedent, merge, qualOld));
             merge.addAll(sameContexts(mentionCluster, potentialAntecedent));
             merge.addAll(samePhrase(mentionCluster, potentialAntecedent));
-            sameUsage(mentionCluster, potentialAntecedent);
             //merge.addAll(sameContexts2(mentionCluster, potentialAntecedent));
 
-            Map<Integer, Mention> goldMentions = document.allGoldMentions;
-            Map<Integer, Mention> predictedMentions = document.allPredictedMentions;
-
-            boolean qualOld = goldMentions.containsKey(mention.mentionID) && goldMentions.containsKey(ant.mentionID)
-                    && goldMentions.get(mention.mentionID).goldCorefClusterID == goldMentions.get(ant.mentionID).goldCorefClusterID;
 
 
             if (false) {
                 BasicDatum<Boolean, String> datum = new BasicDatum<Boolean, String>(merge, qualOld);
-                if (dataset.size() == 0 || dataset.getDatum(dataset.size() - 1).label() || datum.label()) {
-                    dataset.add(datum);
-                }
+                 if (dataset.size() == 0 
+                                    || dataset.getDatum(Math.max(dataset.size() - 3, 0)).label() 
+                                    || dataset.getDatum(Math.max(dataset.size() - 2, 0)).label()
+                                    || dataset.getDatum(Math.max(dataset.size() - 1, 0)).label() 
+                                    || datum.label()) {
+                                dataset.add(datum);
+                            }
                 return false;
             }
             double qual = classifier.probabilityOf(merge, true);

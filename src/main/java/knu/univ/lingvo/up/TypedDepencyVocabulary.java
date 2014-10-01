@@ -35,6 +35,9 @@ public class TypedDepencyVocabulary {
 
         TypedDepencyVocabulary loaded = new TypedDepencyVocabulary();
         for (File file : dictionaries) {
+            if (file.getName().endsWith("det.dic"))
+                continue;
+            
             BufferedReader reader = new BufferedReader(new FileReader(file));
             
             

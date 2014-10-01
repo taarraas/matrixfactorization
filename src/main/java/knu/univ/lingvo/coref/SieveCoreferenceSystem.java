@@ -728,10 +728,10 @@ public class SieveCoreferenceSystem {
 
 
 
-        double mult = 0.005;
-        double dDown[] = {0, 0, -1, 1, 0, 0};
-        double dUp[] = {-1, 1, 0, 0, 0, 0};
-        double dUpPre[] = {0, 0, 0, 0, -1, 1};
+        double mult = 0.007;
+        double dDown[] = {-1, 1, 0, 0};
+        double dUp[] = {0, 0, -1, 1};
+        double dUpPre[] = {0, 0, 0, 0};
 
         double bestScore = runAndScoreCoref(this, mentionExtractor, props, timestamp);
         for (int it = 0; it < 20; it++) {
@@ -746,6 +746,12 @@ public class SieveCoreferenceSystem {
                 double dUpV = dUp[i] * mult;
                 double dDownV = dDown[i] * mult;
                 double dUpPreV = dUpPre[i] * mult;
+                if (dUpV > 1)
+                    dUpV = 1;
+                if (dDownV < 0)
+                    dDownV = 0;
+                if (dUpPreV > 1)
+                    dUpPreV = 1;
                 
                 ((ClassifierSieve) sieves[0]).inconsistencyThreshold += dDownV;
                 ((ClassifierSieve) sieves[0]).matchThreshol += dUpPreV;
