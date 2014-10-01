@@ -348,7 +348,7 @@ public class ClassifierSieve extends DeterministicCorefSieve {
             merge.add("" + potentialAntecedent.getCorefMentions().size());
             merge.add("" + (mention.sentenceNumber - ant.sentenceNumber));
             merge.add("" + (mention.mentionNumber - ant.mentionNumber));            
-            merge.addAll(sameUsage(mentionCluster, potentialAntecedent, merge, qualOld));
+            //merge.addAll(sameUsage(mentionCluster, potentialAntecedent, merge, qualOld));
             merge.addAll(sameContexts(mentionCluster, potentialAntecedent));
             merge.addAll(samePhrase(mentionCluster, potentialAntecedent));
             //merge.addAll(sameContexts2(mentionCluster, potentialAntecedent));
