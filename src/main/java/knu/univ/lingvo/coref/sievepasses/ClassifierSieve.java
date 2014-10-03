@@ -340,6 +340,7 @@ public class ClassifierSieve extends DeterministicCorefSieve {
 
             
             
+
             ArrayList<String> feat1 = mention.getSingletonFeatures(dict);
             ArrayList<String> feat2 = ant.getSingletonFeatures(dict);
             ArrayList<String> merge = new ArrayList(feat1);
@@ -348,9 +349,9 @@ public class ClassifierSieve extends DeterministicCorefSieve {
             merge.add("" + potentialAntecedent.getCorefMentions().size());
             merge.add("" + (mention.sentenceNumber - ant.sentenceNumber));
             merge.add("" + (mention.mentionNumber - ant.mentionNumber));            
-            //merge.addAll(sameUsage(mentionCluster, potentialAntecedent, merge, qualOld));
             merge.addAll(sameContexts(mentionCluster, potentialAntecedent));
             merge.addAll(samePhrase(mentionCluster, potentialAntecedent));
+            merge.addAll(sameUsage(mentionCluster, potentialAntecedent, new ArrayList<String>(), qualOld));
             //merge.addAll(sameContexts2(mentionCluster, potentialAntecedent));
 
 
@@ -358,8 +359,8 @@ public class ClassifierSieve extends DeterministicCorefSieve {
             if (false) {
                 BasicDatum<Boolean, String> datum = new BasicDatum<Boolean, String>(merge, qualOld);
                  if (dataset.size() == 0 
-                                    || dataset.getDatum(Math.max(dataset.size() - 3, 0)).label() 
-                                    || dataset.getDatum(Math.max(dataset.size() - 2, 0)).label()
+//                                    || dataset.getDatum(Math.max(dataset.size() - 3, 0)).label() 
+//                                    || dataset.getDatum(Math.max(dataset.size() - 2, 0)).label()
                                     || dataset.getDatum(Math.max(dataset.size() - 1, 0)).label() 
                                     || datum.label()) {
                                 dataset.add(datum);

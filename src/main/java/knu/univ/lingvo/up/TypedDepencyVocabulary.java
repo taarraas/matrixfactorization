@@ -34,8 +34,6 @@ public class TypedDepencyVocabulary {
         });
 
         TypedDepencyVocabulary loaded = new TypedDepencyVocabulary();
-        if (true)
-            return loaded;
         for (File file : dictionaries) {
             if (file.getName().endsWith("det.dic"))
                 continue;
