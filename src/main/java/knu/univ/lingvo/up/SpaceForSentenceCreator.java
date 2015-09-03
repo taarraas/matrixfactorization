@@ -96,7 +96,7 @@ public class SpaceForSentenceCreator {
             word = w1 + "_" + w2;
         } else if (PREPOSITIONS.contains(tag1)) {
             type = new DepencyToSpaceType.Type(SpaceElement.Type.AB, false);
-            word = w2 + "_" + w2;
+            word = w2 + "_" + w1;
         } else {
             if (type == null) {
                 return null;
@@ -195,9 +195,7 @@ public class SpaceForSentenceCreator {
         punctuation.add("(. .)");
         punctuation.add("(, ,)");
         punctuation.add("(; ;)");
-    }
-
-    ;
+    };
 
     private BaseSpaceElement buildRecursive(Tree p) {
         if (p.isLeaf()) {
@@ -262,7 +260,11 @@ public class SpaceForSentenceCreator {
 
     public static void main(String argv[]) {
         SpaceForSentenceCreator sfsc = new SpaceForSentenceCreator();
-        SpaceElement space = sfsc.getSpace("The strongest rain ever recorded in India shut down the financial hub of Mumbai, snapped communication lines, closed airports and forced thousands of people to sleep in their offices.");
+        SpaceElement space = null;
+        for (int i=0; i < 20; i++)
+        {
+            space = sfsc.getSpace("The strongest rain ever recorded in India shut down the financial hub of Mumbai, snapped communication lines, closed airports and forced thousands of people to sleep in their offices.");
+        }
         System.out.println(space.toString());
     }
 }
